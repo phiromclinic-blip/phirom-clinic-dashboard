@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="th"><head><meta charset="UTF-8"><title>แดชบอร์ดภิรมย์คลินิก (Interactive)</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.0/dist/chart.umd.js"></script>
+<style>
+:root{color-scheme:light}*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Sarabun','Tahoma','Segoe UI',sans-serif;background:linear-gradient(135deg,#F0F4F8 0%,#E8EEF4 100%);color:#2C3E50;min-height:100vh;padding:20px;line-height:1.5}
+.dashboard{max-width:1400px;margin:0 auto}
+.header{background:linear-gradient(135deg,#5B7DB1 0%,#6B95C9 100%);color:white;padding:24px 28px;border-radius:16px;margin-bottom:16px;box-shadow:0 4px 16px rgba(91,125,177,.2)}
+.header h1{font-size:24px;font-weight:700}.header .subtitle{font-size:13px;opacity:.92;margin-top:4px}
+.status-bar{display:flex;align-items:center;gap:8px;margin-top:10px;font-size:12px;opacity:.9;flex-wrap:wrap}
+.status-dot{width:8px;height:8px;border-radius:50%;background:#82E5B0;box-shadow:0 0 8px #82E5B0;animation:pulse 2s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+.filter-bar{background:white;border-radius:14px;padding:14px 18px;margin-bottom:16px;box-shadow:0 2px 8px rgba(0,0,0,.04);display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+.filter-label{font-size:12px;font-weight:700;color:#7B8794;text-transform:uppercase;letter-spacing:.5px}
+.chip-group{display:flex;flex-wrap:wrap;gap:6px}
+.chip{padding:7px 14px;border-radius:20px;background:#F0F4F8;border:1px solid transparent;color:#4B5C6E;font-size:13px;font-weight:500;cursor:pointer;transition:all .2s;font-family:inherit}
+.chip:hover{background:#E1E8EF}
+.chip.active{background:#5B7DB1;color:white;border-color:#5B7DB1;box-shadow:0 2px 6px rgba(91,125,177,.3)}
+.tabs{display:flex;gap:4px;background:white;border-radius:14px;padding:6px;margin-bottom:16px;box-shadow:0 2px 8px rgba(0,0,0,.04);overflow-x:auto}
+.tab{padding:10px 16px;border:none;background:transparent;color:#4B5C6E;font-size:13px;font-weight:600;cursor:pointer;border-radius:10px;transition:all .2s;font-family:inherit;white-space:nowrap}
+.tab:hover{background:#F4F7FB}
+.tab.active{background:linear-gradient(135deg,#5B7DB1,#6B95C9);color:white;box-shadow:0 2px 8px rgba(91,125,177,.3)}
+.tab-pane{display:none;animation:fadeIn .35s ease}.tab-pane.active{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin-bottom:18px}
+.kpi-card{background:white;border-radius:14px;padding:20px;box-shadow:0 2px 8px rgba(0,0,0,.04);border-left:4px solid var(--accent,#5B7DB1);transition:all .2s}
+.kpi-card:hover{transform:translateY(-2px);box-shadow:0 4px 16px rgba(0,0,0,.08)}
+.kpi-card .label{font-size:13px;color:#7B8794;font-weight:500;margin-bottom:8px}
+.kpi-card .value{font-size:26px;font-weight:700;color:#2C3E50}
+.kpi-card .unit{font-size:13px;color:#7B8794;font-weight:500;margin-left:4px}
+.kpi-card .delta{font-size:12px;margin-top:6px;padding:2px 8px;border-radius:6px;display:inline-block;font-weight:600}
+.delta.up{background:#E6F7EF;color:#2A8E5F}.delta.neutral{background:#F0F4F8;color:#6C7A8A}.delta.down{background:#FDEBEC;color:#C0392B}
+.kpi-card.blue{--accent:#5B7DB1}.kpi-card.green{--accent:#6FA589}.kpi-card.orange{--accent:#E8A87C}.kpi-card.purple{--accent:#9D7BB7}
+.section{background:white;border-radius:14px;padding:22px;margin-bottom:16px;box-shadow:0 2px 8px rgba(0,0,0,.04)}
+.section-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:10px}
+.section h2{font-size:16px;font-weight:700;color:#2C3E50;display:flex;align-items:center;gap:8px}
+.section h2::before{content:'';width:4px;height:18px;background:linear-gradient(180deg,#5B7DB1,#6B95C9);border-radius:2px}
+.section .desc{font-size:12px;color:#7B8794;margin-bottom:14px}
+.row-2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
+@media(max-width:900px){.row-2{grid-template-columns:1fr}}
+.chart-container{position:relative;height:320px;width:100%}.chart-tall{height:380px}
+.toggle-group{display:flex;background:#F0F4F8;padding:3px;border-radius:8px}
+.toggle-btn{padding:5px 12px;border:none;background:transparent;color:#4B5C6E;font-size:12px;font-weight:600;cursor:pointer;border-radius:6px;transition:all .2s;font-family:inherit}
+.toggle-btn.active{background:white;color:#5B7DB1;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.detail-card{background:linear-gradient(135deg,#FAFBFD 0%,#F4F7FB 100%);border:1px solid #E1E8EF;border-radius:12px;padding:16px 18px;margin-top:14px;display:none}
+.detail-card.show{display:block}
+.detail-card .title{font-size:14px;font-weight:700;color:#2C3E50;margin-bottom:10px}
+.detail-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px}
+.detail-grid .item{background:white;padding:10px 12px;border-radius:8px}
+.detail-grid .item .lbl{font-size:11px;color:#7B8794}
+.detail-grid .item .val{font-size:16px;font-weight:700;color:#2C3E50;margin-top:2px}
+.detail-card .close-btn{float:right;background:transparent;border:none;cursor:pointer;color:#7B8794;font-size:18px}
+.search-box{display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap}
+.search-input{flex:1;min-width:200px;padding:10px 14px;border:1px solid #E1E8EF;border-radius:10px;font-size:14px;color:#2C3E50;font-family:inherit;background:#FAFBFD}
+.search-input:focus{outline:none;border-color:#5B7DB1;background:white;box-shadow:0 0 0 3px rgba(91,125,177,.15)}
+.sort-select{padding:10px 14px;border:1px solid #E1E8EF;border-radius:10px;font-size:13px;color:#2C3E50;background:#FAFBFD;cursor:pointer;font-family:inherit}
+.service-table{width:100%;border-collapse:collapse;font-size:13px}
+.service-table th{text-align:left;padding:12px 10px;background:#F4F7FB;color:#4B5C6E;font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.3px;border-bottom:2px solid #E1E8EF;cursor:pointer;user-select:none}
+.service-table th.right,.service-table td.right{text-align:right}
+.service-table td{padding:11px 10px;border-bottom:1px solid #EEF1F4;color:#2C3E50}
+.service-table tr:hover td{background:#FAFBFD}
+.service-table .rank{display:inline-block;width:22px;height:22px;background:#E1E8EF;border-radius:50%;text-align:center;line-height:22px;font-size:11px;font-weight:700;color:#4B5C6E}
+.bar-cell{background:linear-gradient(90deg,#5B7DB1 var(--w,0%),transparent var(--w,0%));background-size:100% 5px;background-position:bottom;background-repeat:no-repeat;padding-bottom:10px}
+.empty-row td{text-align:center;padding:30px;color:#94A3B5;font-style:italic}
+.insights{background:linear-gradient(135deg,#FAFBFD 0%,#F4F7FB 100%);border-left:4px solid #5B7DB1;padding:16px 20px;border-radius:10px;margin-bottom:10px}
+.insights h3{font-size:14px;color:#2C3E50;margin-bottom:6px;font-weight:700}
+.insights p{font-size:13px;color:#4B5C6E;line-height:1.7}
+.insights .highlight{background:#FFF6E5;padding:1px 6px;border-radius:4px;font-weight:600;color:#B07023}
+.insights.green{border-color:#6FA589}.insights.green .highlight{background:#E6F4ED;color:#2A8E5F}
+.insights.orange{border-color:#E8A87C}.insights.orange .highlight{background:#FDF1E5;color:#B86F36}
+.insights.purple{border-color:#9D7BB7}.insights.purple .highlight{background:#F2EAF7;color:#6C4D87}
+.social-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+@media(max-width:900px){.social-grid{grid-template-columns:1fr}}
+.social-card{padding:16px;border-radius:12px;background:#FAFBFD;border:1px solid #EEF1F4}
+.social-card .platform{font-size:14px;font-weight:700;margin-bottom:12px}
+.social-card.fb{border-top:3px solid #5B7DB1}.social-card.tt{border-top:3px solid #2C3E50}.social-card.ln{border-top:3px solid #6FA589}
+.social-stat{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px dashed #E1E8EF;font-size:13px}
+.social-stat:last-child{border-bottom:none}
+.social-stat .lbl{color:#7B8794}.social-stat .val{font-weight:700;color:#2C3E50}
+.footer{text-align:center;font-size:12px;color:#94A3B5;padding:12px}
+th.sort-asc::after{content:' ▲';color:#5B7DB1}th.sort-desc::after{content:' ▼';color:#5B7DB1}
+.month-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px}
+.month-card{background:#FAFBFD;border:1px solid #EEF1F4;border-radius:12px;padding:14px 16px}
+.month-card h4{font-size:14px;color:#2C3E50;margin-bottom:10px;font-weight:700;display:flex;justify-content:space-between;align-items:center}
+.month-card h4 .sum{font-size:12px;color:#7B8794;font-weight:500}
+.svc-bar{display:flex;align-items:center;gap:10px;margin-bottom:8px;font-size:12px}
+.svc-bar .name{color:#2C3E50;font-weight:500;max-width:60%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.svc-bar .qty{margin-left:auto;color:#5B7DB1;font-weight:700}
+.svc-bar .gauge{flex:1;height:6px;background:#E1E8EF;border-radius:3px;overflow:hidden}
+.svc-bar .gauge .fill{height:100%;background:linear-gradient(90deg,#5B7DB1,#6B95C9);border-radius:3px}
+.svc-bar.rank-1 .gauge .fill{background:linear-gradient(90deg,#E8A87C,#F0C9A8)}
+.svc-bar.rank-2 .gauge .fill{background:linear-gradient(90deg,#6FA589,#9DC2AF)}
+.svc-bar.rank-3 .gauge .fill{background:linear-gradient(90deg,#9D7BB7,#BFA3CF)}
+.dow-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;margin-top:14px}
+.dow-cell{background:white;border:1px solid #E1E8EF;border-radius:10px;padding:12px 8px;text-align:center}
+.dow-cell .dow-name{font-size:11px;color:#7B8794;font-weight:600;text-transform:uppercase}
+.dow-cell .dow-val{font-size:20px;font-weight:700;color:#2C3E50;margin-top:4px}
+.dow-cell .dow-unit{font-size:10px;color:#94A3B5}
+.dow-cell.max{background:linear-gradient(135deg,#E6F4ED,#F0F8F3);border-color:#6FA589}
+.dow-cell.max .dow-val{color:#2A8E5F}
+.dow-cell.min{background:linear-gradient(135deg,#FDF1E5,#FBF6EF);border-color:#E8A87C}
+.dow-cell.min .dow-val{color:#B86F36}
+.dow-cell.zero .dow-val{color:#C0CED9}
+.month-selector{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.month-chip{padding:6px 12px;border-radius:16px;background:#F0F4F8;border:1px solid transparent;color:#4B5C6E;font-size:12px;font-weight:500;cursor:pointer;transition:all .2s;font-family:inherit}
+.month-chip:hover{background:#E1E8EF}
+.month-chip.active{background:#5B7DB1;color:white;border-color:#5B7DB1}
+.live-badge{display:inline-flex;align-items:center;gap:4px;background:#E6F7EF;color:#2A8E5F;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600}
+.live-badge::before{content:'●';animation:pulse 1.5s ease-in-out infinite}
+</style></head>
+<body><div class="dashboard">
+<div class="header"><h1>🏥 แดชบอร์ดภิรมย์คลินิก</h1><div class="subtitle">วิเคราะห์ผลการดำเนินงานแบบโต้ตอบ — ลองคลิกที่กราฟ ใช้ตัวกรอง และค้นหาบริการ</div>
+<div class="status-bar"><span class="status-dot"></span><span id="status-text">ข้อมูล ณ พ.ค. 2569 • ที่มา: Google Drive (สถิติภิรมย์คลินิก)</span><span id="bill-status"></span></div></div>
+<div class="filter-bar"><span class="filter-label">⏱ ช่วงเวลา</span><div class="chip-group" id="rangeChips">
+<button class="chip active" data-range="all">ทั้งหมด (13 เดือน)</button>
+<button class="chip" data-range="6mo">6 เดือนล่าสุด</button>
+<button class="chip" data-range="3mo">3 เดือนล่าสุด</button>
+<button class="chip" data-range="2569">ปี 2569</button>
+<button class="chip" data-range="2568">ปี 2568</button></div>
+<span class="filter-label" style="margin-left:8px">📅 เลือกเดือน</span>
+<select class="sort-select" id="monthSelect" style="min-width:140px"><option value="">— ไม่เลือก —</option></select></div>
+<div class="tabs" id="tabBar">
+<button class="tab active" data-tab="overview">📊 ภาพรวม</button>
+<button class="tab" data-tab="revenue">💰 รายได้</button>
+<button class="tab" data-tab="patients">👥 คนไข้</button>
+<button class="tab" data-tab="services">🏥 บริการ</button>
+<button class="tab" data-tab="monthlysvc">🔄 บริการรายเดือน</button>
+<button class="tab" data-tab="daily">📅 รายวัน</button>
+<button class="tab" data-tab="social">📱 โซเชียล</button>
+<button class="tab" data-tab="insights">🔍 วิเคราะห์</button></div>
+<div class="tab-pane active" id="tab-overview">
+<div class="kpi-grid">
+<div class="kpi-card blue"><div class="label">💰 รายได้รวม</div><div class="value" id="kpi-total-rev">—</div><div class="delta neutral" id="kpi-total-rev-sub">ช่วงที่เลือก</div></div>
+<div class="kpi-card green"><div class="label">👥 คนไข้รวม</div><div class="value" id="kpi-total-patients">—</div><div class="delta up" id="kpi-new-rate">คนไข้ใหม่ —%</div></div>
+<div class="kpi-card orange"><div class="label">💵 เฉลี่ย/วัน</div><div class="value" id="kpi-avg-day">—</div><div class="delta neutral" id="kpi-avg-day-sub">—</div></div>
+<div class="kpi-card purple"><div class="label">⭐ รายได้/คนไข้</div><div class="value" id="kpi-arpu">—</div><div class="delta neutral">บาท/ครั้ง</div></div></div>
+<div class="section"><div class="section-head"><h2>📈 แนวโน้มรายได้รายเดือน</h2>
+<div class="toggle-group"><button class="toggle-btn active" data-trend="monthly">รายเดือน</button><button class="toggle-btn" data-trend="cumulative">สะสม</button></div></div>
+<div class="desc">คลิกที่จุดในกราฟเพื่อดูรายละเอียดของเดือนนั้น</div>
+<div class="chart-container chart-tall"><canvas id="revenueTrendChart"></canvas></div>
+<div class="detail-card" id="monthDetail"><button class="close-btn" onclick="document.getElementById('monthDetail').classList.remove('show')">✕</button><div class="title" id="detailTitle"></div><div class="detail-grid" id="detailGrid"></div></div></div>
+<div class="row-2">
+<div class="section"><div class="section-head"><h2>👥 คนไข้ใหม่ vs เก่า</h2>
+<div class="toggle-group"><button class="toggle-btn active" data-patient="stacked">รวม</button><button class="toggle-btn" data-patient="split">แยก</button></div></div>
+<div class="chart-container"><canvas id="patientChart"></canvas></div></div>
+<div class="section"><h2>💵 รายได้เฉลี่ยต่อวัน</h2><div class="chart-container"><canvas id="avgDayChart"></canvas></div></div></div></div>
+<div class="tab-pane" id="tab-revenue">
+<div class="row-2">
+<div class="section"><h2>🆚 เทียบ ปี 2568 vs 2569</h2><div class="chart-container chart-tall"><canvas id="yoyChart"></canvas></div></div>
+<div class="section"><h2>📈 อัตราการเติบโต %</h2><div class="chart-container chart-tall"><canvas id="growthChart"></canvas></div></div></div>
+<div class="section"><h2>📋 รายละเอียดรายได้รายเดือน</h2><div class="desc">คลิกหัวคอลัมน์เพื่อเรียงลำดับ</div>
+<div style="overflow-x:auto"><table class="service-table" id="revenueTable"><thead><tr>
+<th data-sort="label">เดือน</th><th class="right" data-sort="revenue">รายได้ (฿)</th><th class="right" data-sort="perDay">เฉลี่ย/วัน</th>
+<th class="right" data-sort="openDays">วันทำการ</th><th class="right" data-sort="total">คนไข้</th><th class="right" data-sort="newP">คนไข้ใหม่</th>
+</tr></thead><tbody id="revenueTableBody"></tbody></table></div></div></div>
+<div class="tab-pane" id="tab-patients">
+<div class="kpi-grid">
+<div class="kpi-card blue"><div class="label">👥 คนไข้รวม</div><div class="value" id="p-total">—</div></div>
+<div class="kpi-card green"><div class="label">🆕 คนไข้ใหม่</div><div class="value" id="p-new">—</div></div>
+<div class="kpi-card orange"><div class="label">🔁 คนไข้เก่า</div><div class="value" id="p-old">—</div></div>
+<div class="kpi-card purple"><div class="label">📊 อัตราคนไข้ใหม่</div><div class="value" id="p-rate">—</div></div></div>
+<div class="row-2">
+<div class="section"><h2>📊 จำนวนคนไข้รวมต่อเดือน</h2><div class="chart-container"><canvas id="patientTotalChart"></canvas></div></div>
+<div class="section"><h2>🔀 สัดส่วนคนไข้ใหม่/เก่า</h2><div class="chart-container"><canvas id="patientRatioChart"></canvas></div></div></div>
+<div class="section"><h2>📈 แนวโน้มคนไข้ใหม่</h2><div class="chart-container chart-tall"><canvas id="newPatientTrendChart"></canvas></div></div></div>
+<div class="tab-pane" id="tab-services">
+<div class="section"><div class="section-head"><h2>🏆 Top 10 บริการ</h2>
+<div class="toggle-group"><button class="toggle-btn active" data-svc="revenue">ตามรายได้</button><button class="toggle-btn" data-svc="volume">ตามจำนวน</button></div></div>
+<div class="chart-container chart-tall"><canvas id="topServiceChart"></canvas></div></div>
+<div class="section"><div class="section-head"><h2>🔍 ค้นหาบริการทั้งหมด</h2><span style="font-size:12px;color:#7B8794" id="svc-count">— รายการ</span></div>
+<div class="search-box"><input type="text" class="search-input" id="svcSearch" placeholder="🔎 พิมพ์ชื่อบริการเพื่อค้นหา..."/>
+<select class="sort-select" id="svcSort"><option value="sum-desc">เรียงรายได้ (มาก→น้อย)</option><option value="sum-asc">เรียงรายได้ (น้อย→มาก)</option><option value="qty-desc">เรียงจำนวน (มาก→น้อย)</option><option value="qty-asc">เรียงจำนวน (น้อย→มาก)</option><option value="price-desc">เรียงราคา (มาก→น้อย)</option><option value="price-asc">เรียงราคา (น้อย→มาก)</option></select></div>
+<div style="overflow-x:auto;max-height:600px;overflow-y:auto"><table class="service-table" id="allSvcTable"><thead><tr><th style="width:50px">#</th><th>ชื่อบริการ</th><th class="right">ราคา (฿)</th><th class="right">จำนวนครั้ง</th><th class="right">รายได้รวม</th></tr></thead><tbody id="allSvcBody"></tbody></table></div></div></div>
+<div class="tab-pane" id="tab-monthlysvc">
+<div class="section"><div class="section-head"><h2>🔄 บริการเด่นเปรียบเทียบรายเดือน</h2></div><div class="desc">เปรียบเทียบ Top 3 บริการที่นิยมในแต่ละเดือน</div><div class="month-grid" id="monthlySvcGrid"></div></div>
+<div class="section"><h2>📊 แนวโน้มบริการ Top 3 ตลอดปี</h2><div class="chart-container chart-tall"><canvas id="trendTopSvcChart"></canvas></div></div>
+<div class="section"><h2>🥇 บริการที่ทำรายได้สูงสุดในแต่ละเดือน</h2><div class="chart-container chart-tall"><canvas id="monthlyTopRevChart"></canvas></div></div></div>
+<div class="tab-pane" id="tab-daily">
+<div class="kpi-grid">
+<div class="kpi-card blue"><div class="label">📅 คนไข้/วัน (เฉลี่ย)</div><div class="value" id="kpi-avg-patient-day">—</div><div class="delta neutral">ช่วงที่เลือก</div></div>
+<div class="kpi-card green"><div class="label">🏆 วันที่คนไข้มากสุด</div><div class="value" id="kpi-max-day">—</div><div class="delta up" id="kpi-max-day-val">—</div></div>
+<div class="kpi-card orange"><div class="label">📉 วันที่คนไข้น้อยสุด</div><div class="value" id="kpi-min-day">—</div><div class="delta neutral" id="kpi-min-day-val">—</div></div>
+<div class="kpi-card purple"><div class="label">🗓 วันทำการรวม</div><div class="value" id="kpi-total-days">—</div><div class="delta neutral">วัน</div></div></div>
+<div class="section"><div class="section-head"><h2>📅 จำนวนคนไข้รายวัน — Timeline</h2><span id="live-badge-1" class="live-badge">รอข้อมูล</span></div><div class="desc">คนไข้ที่เข้ามาใช้บริการในแต่ละวัน (ข้อมูลจาก patient2026: ม.ค.–พ.ค. 2569)</div><div class="chart-container chart-tall"><canvas id="dailyTimelineChart"></canvas></div></div>
+<div class="section"><div class="section-head"><h2>📊 คนไข้เฉลี่ยตามวันในสัปดาห์</h2><span id="live-badge-2" class="live-badge">รอข้อมูล</span></div><div class="desc">เลือกเดือนเพื่อดูว่าวันไหนของสัปดาห์มีคนไข้เฉลี่ยมากที่สุด (เขียว) / น้อยที่สุด (ส้ม)</div><div class="month-selector" id="dowMonthSelector"></div><div class="row-2"><div><div class="chart-container"><canvas id="dowChart"></canvas></div></div><div><div class="dow-grid" id="dowGrid"></div></div></div></div>
+<div class="section"><h2>📋 ตารางสรุปวันของสัปดาห์ — รายเดือน</h2><div class="desc">ค่าเฉลี่ยคนไข้ในแต่ละวันของสัปดาห์ เปรียบเทียบทุกเดือน</div><div style="overflow-x:auto"><table class="service-table" id="dowSummaryTable"><thead><tr><th>เดือน</th><th class="right">อา.</th><th class="right">จ.</th><th class="right">อ.</th><th class="right">พ.</th><th class="right">พฤ.</th><th class="right">ศ.</th><th class="right">ส.</th><th class="right">มากสุด</th><th class="right">น้อยสุด</th></tr></thead><tbody id="dowSummaryBody"></tbody></table></div></div></div>
+<div class="tab-pane" id="tab-social">
+<div class="section"><h2>📱 ภาพรวมโซเชียลมีเดีย (สัปดาห์ล่าสุด)</h2>
+<div class="social-grid">
+<div class="social-card fb"><div class="platform">📘 Facebook</div>
+<div class="social-stat"><span class="lbl">ยอดดู</span><span class="val">167,313</span></div>
+<div class="social-stat"><span class="lbl">ผู้ชม</span><span class="val">106,832</span></div>
+<div class="social-stat"><span class="lbl">การโต้ตอบ</span><span class="val">89</span></div>
+<div class="social-stat"><span class="lbl">คลิกลิงก์</span><span class="val">295</span></div>
+<div class="social-stat"><span class="lbl">ผู้ติดต่อ</span><span class="val">70</span></div></div>
+<div class="social-card tt"><div class="platform">🎵 TikTok</div>
+<div class="social-stat"><span class="lbl">ยอดชม</span><span class="val">53,836</span></div>
+<div class="social-stat"><span class="lbl">คอนเวอร์ชัน</span><span class="val">1</span></div>
+<div class="social-stat"><span class="lbl">ผู้ติดตาม</span><span class="val">74</span></div></div>
+<div class="social-card ln"><div class="platform">💬 LINE OA</div>
+<div class="social-stat"><span class="lbl">เพิ่มเพื่อนใหม่</span><span class="val">38</span></div>
+<div class="social-stat"><span class="lbl">จากลิงก์</span><span class="val">29</span></div>
+<div class="social-stat"><span class="lbl">จากโปสเตอร์</span><span class="val">7</span></div></div></div></div>
+<div class="row-2">
+<div class="section"><h2>📊 Facebook — ยอดดูรายสัปดาห์</h2><div class="chart-container chart-tall"><canvas id="fbViewsChart"></canvas></div></div>
+<div class="section"><h2>📊 TikTok — ยอดชมวิดีโอ</h2><div class="chart-container chart-tall"><canvas id="ttViewsChart"></canvas></div></div></div>
+<div class="section"><h2>💬 LINE OA — เพิ่มเพื่อนใหม่</h2><div class="chart-container"><canvas id="lineChart"></canvas></div></div></div>
+<div class="tab-pane" id="tab-insights"><div class="section"><h2>🔍 บทวิเคราะห์ภาพรวม</h2>
+<div class="insights green"><h3>📈 การเติบโตอย่างต่อเนื่อง</h3><p>คลินิกเติบโตจาก <span class="highlight">29,089 บาท</span> ใน เม.ย. 68 สู่จุดสูงสุด <span class="highlight">689,732 บาท</span> ใน มี.ค. 69 — <span class="highlight">23 เท่า</span> ภายใน 1 ปี</p></div>
+<div class="insights"><h3>💼 รายได้ต่อวันพุ่งสูง</h3><p>เพิ่มจาก 2,237 บาท เป็น <span class="highlight">27,860 บาท</span> — <span class="highlight">+1,145%</span></p></div>
+<div class="insights orange"><h3>🎯 บริการเรือธง</h3><p><span class="highlight">DF-ค่าตรวจรักษา</span> (317,600) + <span class="highlight">ultrasound2D-transvagina</span> (221,500)</p></div>
+<div class="insights purple"><h3>👥 คนไข้ใหม่เพิ่มขึ้น</h3><p>มี.ค. 2569 คนไข้ใหม่ <span class="highlight">209 คน</span> จาก 382 (54.7%) สูงสุดในประวัติ</p></div></div></div>
+<div class="footer">📊 ภิรมย์คลินิก • ข้อมูลจาก Google Drive — สถิติภิรมย์คลินิก</div></div>
+<script>
+const monthlyData=[
+{ym:'2568-04',label:'เม.ย. 68',year:'2568',revenue:29089,perDay:2237,openDays:13,total:34,oldP:28,newP:6},
+{ym:'2568-05',label:'พ.ค. 68',year:'2568',revenue:148998,perDay:5518,openDays:27,total:94,oldP:73,newP:21},
+{ym:'2568-06',label:'มิ.ย. 68',year:'2568',revenue:179562,perDay:7481,openDays:24,total:124,oldP:95,newP:29},
+{ym:'2568-07',label:'ก.ค. 68',year:'2568',revenue:341599,perDay:12199,openDays:28,total:168,oldP:116,newP:52},
+{ym:'2568-08',label:'ส.ค. 68',year:'2568',revenue:391872,perDay:14513,openDays:27,total:257,oldP:165,newP:92},
+{ym:'2568-09',label:'ก.ย. 68',year:'2568',revenue:430494,perDay:16557,openDays:26,total:265,oldP:148,newP:117},
+{ym:'2568-10',label:'ต.ค. 68',year:'2568',revenue:380989,perDay:15239,openDays:25,total:258,oldP:149,newP:109},
+{ym:'2568-11',label:'พ.ย. 68',year:'2568',revenue:462781,perDay:20120,openDays:23,total:270,oldP:120,newP:150},
+{ym:'2568-12',label:'ธ.ค. 68',year:'2568',revenue:546053,perDay:21002,openDays:26,total:301,oldP:158,newP:143},
+{ym:'2569-01',label:'ม.ค. 69',year:'2569',revenue:587675,perDay:24236,openDays:24,total:310,oldP:157,newP:153},
+{ym:'2569-02',label:'ก.พ. 69',year:'2569',revenue:577191,perDay:24049,openDays:24,total:310,oldP:138,newP:172},
+{ym:'2569-03',label:'มี.ค. 69',year:'2569',revenue:689732,perDay:27589,openDays:25,total:382,oldP:173,newP:209},
+{ym:'2569-04',label:'เม.ย. 69',year:'2569',revenue:557210,perDay:27860,openDays:20,total:305,oldP:170,newP:135}];
+const monthlyTopSvc={
+'2568-05':[{name:'ตรวจภายใน',qty:19},{name:'ใบรับรองแพทย์',qty:2}],
+'2568-06':[{name:'ค่าตรวจรักษา',qty:58},{name:'ตรวจภายใน',qty:16},{name:'DF-หัตถการ 1000',qty:3}],
+'2568-07':[{name:'ตรวจภายใน',qty:22},{name:'STD 12 profile',qty:8},{name:'TCA',qty:3}],
+'2568-08':[{name:'ultrasound2D-transvagina',qty:49},{name:'ตรวจภายใน',qty:46},{name:'ultrasound2D-ANC follow up',qty:9}],
+'2568-09':[{name:'ultrasound2D-transvagina',qty:65},{name:'ตรวจภายใน',qty:36},{name:'ultrasound2D-ANC follow up',qty:21}],
+'2568-10':[{name:'ultrasound2D-transvagina',qty:48},{name:'ตรวจภายใน',qty:48},{name:'ultrasound2D-ANC follow up',qty:29}],
+'2568-11':[{name:'ultrasound2D-transvagina',qty:48},{name:'ตรวจภายใน',qty:35},{name:'ultrasound2D-ANC follow up',qty:30}],
+'2568-12':[{name:'ultrasound2D-transvagina',qty:55},{name:'ตรวจภายใน',qty:42},{name:'ultrasound2D-ANC follow up',qty:27}],
+'2569-01':[{name:'ultrasound2D-transvagina',qty:66},{name:'ตรวจภายใน',qty:37},{name:'ultrasound2D-ANC follow up',qty:35}],
+'2569-02':[{name:'ultrasound2D-transvagina',qty:59},{name:'ตรวจภายใน',qty:39},{name:'ultrasound2D-ANC follow up',qty:34}],
+'2569-03':[{name:'ultrasound2D-transvagina',qty:64},{name:'ultrasound2D-ANC follow up',qty:56},{name:'ตรวจภายใน',qty:41}]};
+const allServices=[
+{name:'DF-ค่าตรวจรักษา',price:350,qty:993,sum:317600},{name:'ultrasound2D-transvagina',price:850,qty:265,sum:221500},
+{name:'OBG-PV+Thinprep+HPV21+TVS',price:3000,qty:44,sum:132000},{name:'OBG-PV+thinprep+HPV21',price:2200,qty:44,sum:96800},
+{name:'obg-ฝากครรภ์ครั้งแรก GA<12wk',price:2350,qty:40,sum:94000},{name:'ultrasound2D-ANC follow up',price:600,qty:116,sum:69600},
+{name:'obg-ฝากครรภ์ครั้งต่อไป',price:1200,qty:57,sum:68400},{name:'NIPT advanced 23คู่',price:10900,qty:6,sum:65400},
+{name:'OBG- STIs 15 profile',price:2890,qty:22,sum:63580},{name:'ค่าตรวจภายใน',price:200,qty:245,sum:49000},
+{name:'ultrasound2D-ANC ครั้งแรก',price:800,qty:51,sum:40800},{name:'NIPT basic 13,18,21',price:7900,qty:5,sum:39500},
+{name:'complete NIPT 96 โรค',price:16900,qty:2,sum:33800},{name:'ultrasound2D-anomaly',price:1000,qty:31,sum:31000},
+{name:'DF off implanon',price:1400,qty:22,sum:30800},{name:'ultrasound MFM',price:2350,qty:13,sum:30550},
+{name:'OBG-PV+Thinprep',price:1400,qty:21,sum:29400},{name:'OBG-PV+thinprep+TVS',price:2200,qty:13,sum:28600},
+{name:'STD 12 profile',price:1590,qty:15,sum:23850},{name:'ปากกา Mounjaro 2.5 mg',price:11900,qty:2,sum:23800},
+{name:'obg-ฝากครรภ์ครั้งแรก GA>12wk',price:2350,qty:10,sum:23500},{name:'OBG-amenorrhea (TSH,PRL+TVS)',price:2250,qty:10,sum:22500},
+{name:'ultrasound3D/4D',price:2000,qty:11,sum:22000},{name:'endometrial sampling',price:2500,qty:8,sum:20000},
+{name:'ปากกา Mounjaro 7.5 mg',price:19900,qty:1,sum:19900},{name:'ปากกา Mounjaro 5mg',price:16900,qty:1,sum:16900},
+{name:'DF Implanon',price:3850,qty:4,sum:15400},{name:'Implanon (ฝัง+off)',price:4850,qty:3,sum:14550},
+{name:'OBG-amenorrhea full',price:3333,qty:4,sum:13332},{name:'copper IUD',price:2800,qty:4,sum:11200},
+{name:'Quad test',price:2490,qty:4,sum:9960},{name:'NST-fetal monitoring',price:500,qty:18,sum:9000},
+{name:'DF-หัตถการ 1000 บาท',price:1000,qty:8,sum:8000},{name:'Beta-hcg',price:600,qty:13,sum:7800},
+{name:'TCA จี้หูด',price:300,qty:25,sum:7500},{name:'DF-ค่าบริการฉีดยา',price:150,qty:45,sum:6750},
+{name:'DF-หัตถการ 500',price:500,qty:8,sum:4000},{name:'STD HIV/SY/HbsAg/HBV',price:990,qty:4,sum:3960},
+{name:'ใบรับรองแพทย์ 5 โรค',price:200,qty:9,sum:1800},{name:'VDRL',price:250,qty:4,sum:1000}];
+const fbWeekly=[{wk:'27ต.ค.-2พ.ย.',views:59382,viewers:12003},{wk:'3-9 พ.ย.',views:84279,viewers:50133},{wk:'10-16 พ.ย.',views:130295,viewers:99490},{wk:'17-23 พ.ย.',views:138807,viewers:95226},{wk:'24-30 พ.ย.',views:135956,viewers:92585},{wk:'1-7 ธ.ค.',views:155865,viewers:102027},{wk:'8-14 ธ.ค.',views:156251,viewers:101353},{wk:'15-21 ธ.ค.',views:73148,viewers:40780},{wk:'22-28 ธ.ค.',views:72543,viewers:34545},{wk:'29ธ.ค.-4ม.ค.',views:76751,viewers:39600},{wk:'5-11 ม.ค.',views:62531,viewers:27177},{wk:'12-18 ม.ค.',views:161586,viewers:128993},{wk:'19-25 ม.ค.',views:291030,viewers:190998},{wk:'26ม.ค.-1ก.พ.',views:44533,viewers:22495},{wk:'2-8 ก.พ.',views:22826,viewers:11234},{wk:'9-15 ก.พ.',views:40935,viewers:21063},{wk:'16-22 ก.พ.',views:30873,viewers:15733},{wk:'23ก.พ.-1มี.ค.',views:74777,viewers:46560},{wk:'2-8 มี.ค.',views:166380,viewers:105177},{wk:'9-15 มี.ค.',views:185555,viewers:118286},{wk:'16-22 มี.ค.',views:167313,viewers:106832}];
+const ttWeekly=[{wk:'27ต.ค.-2พ.ย.',views:61242},{wk:'3-9 พ.ย.',views:102701},{wk:'10-16 พ.ย.',views:77893},{wk:'17-23 พ.ย.',views:81865},{wk:'24-30 พ.ย.',views:73431},{wk:'1-7 ธ.ค.',views:126479},{wk:'8-14 ธ.ค.',views:117879},{wk:'15-21 ธ.ค.',views:130223},{wk:'22-28 ธ.ค.',views:101263},{wk:'29ธ.ค.-4ม.ค.',views:81591},{wk:'5-11 ม.ค.',views:104678},{wk:'12-18 ม.ค.',views:91537},{wk:'19-25 ม.ค.',views:78225},{wk:'26ม.ค.-1ก.พ.',views:122608},{wk:'2-8 ก.พ.',views:67831},{wk:'9-15 ก.พ.',views:53836}];
+const lineWeekly=[{wk:'27ต.ค.-2พ.ย.',link:27,poster:5},{wk:'3-9 พ.ย.',link:30,poster:6},{wk:'10-16 พ.ย.',link:33,poster:17},{wk:'17-23 พ.ย.',link:26,poster:11},{wk:'24-30 พ.ย.',link:30,poster:13},{wk:'1-7 ธ.ค.',link:24,poster:9},{wk:'8-14 ธ.ค.',link:32,poster:8},{wk:'15-21 ธ.ค.',link:56,poster:8},{wk:'22-28 ธ.ค.',link:34,poster:9},{wk:'29ธ.ค.-4ม.ค.',link:30,poster:7},{wk:'5-11 ม.ค.',link:43,poster:14},{wk:'12-18 ม.ค.',link:26,poster:10},{wk:'19-25 ม.ค.',link:29,poster:8},{wk:'26ม.ค.-1ก.พ.',link:33,poster:13}];
+const dailyByMonth={
+'2026-01':[[4,6,8],[5,4,3],[6,8,9],[7,5,7],[8,12,3],[10,8,4],[11,7,10],[12,5,5],[13,6,8],[14,7,2],[15,4,8],[17,2,9],[18,8,7],[19,10,6],[20,7,9],[21,8,6],[22,6,5],[24,6,7],[25,2,8],[26,7,9],[27,3,10],[28,4,1],[29,7,4],[31,15,5]],
+'2026-02':[[1,8,10],[2,7,10],[3,7,6],[4,6,7],[5,7,7],[7,8,9],[8,1,9],[9,4,10],[10,9,8],[11,4,5],[12,1,7],[14,9,8],[15,5,9],[16,6,7],[17,3,7],[18,8,3],[19,7,4],[21,2,9],[22,4,7],[23,7,6],[24,12,4],[25,3,6],[26,6,8],[28,4,6]],
+'2026-03':[[1,9,11],[2,6,13],[3,11,6],[4,5,7],[5,5,12],[7,7,8],[8,10,6],[9,8,7],[10,9,8],[11,9,4],[12,10,6],[14,6,8],[15,6,9],[16,6,11],[17,6,10],[19,5,4],[21,8,9],[22,8,9],[23,5,13],[24,3,9],[26,4,3],[28,5,6],[29,10,11],[30,12,11],[31,5,8]],
+'2026-04':[[1,7,5],[2,4,0],[5,1,16],[6,5,13],[7,10,9],[9,8,5],[11,5,10],[12,3,15],[18,13,5],[19,7,12],[20,7,13],[21,9,9],[22,6,6],[23,8,3],[25,7,2],[26,5,19],[27,6,10],[28,8,6],[29,11,2],[30,5,10]],
+'2026-05':[[1,6,2],[2,6,5],[3,8,9],[4,6,10],[5,5,5],[6,11,6],[7,5,2],[8,7,7],[9,7,3],[10,3,18],[11,0,3]]};
+const state={range:'all',trend:'monthly',patientView:'stacked',serviceView:'revenue',svcSearch:'',svcSort:'sum-desc',revSort:{key:'label',dir:'asc'},dowMonth:null};
+const COLORS={primary:'#5B7DB1',primaryLight:'#A8BDD9',green:'#6FA589',greenLight:'#B5D4C3',orange:'#E8A87C',purple:'#9D7BB7',purpleLight:'#C9B4D6',gray:'#94A3B5',rose:'#C38D9E'};
+const DOW_NAMES=['อา','จ','อ','พ','พฤ','ศ','ส'];const DOW_FULL=['อาทิตย์','จันทร์','อังคาร','พุธ','พฤหัสฯ','ศุกร์','เสาร์'];
+const fmt=n=>new Intl.NumberFormat('en-US').format(Math.round(n));
+const fmtBaht=n=>'฿'+fmt(n);
+Chart.defaults.font.family="'Sarabun','Tahoma','Segoe UI',sans-serif";Chart.defaults.font.size=12;Chart.defaults.color='#4B5C6E';
+Chart.defaults.plugins.legend.labels.usePointStyle=true;Chart.defaults.plugins.legend.labels.padding=14;
+Chart.defaults.plugins.tooltip.backgroundColor='rgba(44,62,80,.95)';Chart.defaults.plugins.tooltip.padding=12;Chart.defaults.plugins.tooltip.cornerRadius=8;
+const charts={};let dailyData=null,dowByMonth=null;
+function getFilteredData(){if(state.range&&state.range.startsWith('month:')){const ym=state.range.slice(6);return monthlyData.filter(d=>d.ym===ym);}if(state.range==='all')return monthlyData;if(state.range==='6mo')return monthlyData.slice(-6);if(state.range==='3mo')return monthlyData.slice(-3);if(state.range==='2569')return monthlyData.filter(d=>d.year==='2569');if(state.range==='2568')return monthlyData.filter(d=>d.year==='2568');return monthlyData;}
+function makeGradient(ctx,color){const c=ctx.chart.ctx;const g=c.createLinearGradient(0,0,0,380);g.addColorStop(0,color+'59');g.addColorStop(1,color+'05');return g;}
+function renderKPIs(){const data=getFilteredData();if(data.length===0)return;const totalRev=data.reduce((s,m)=>s+m.revenue,0);const totalPat=data.reduce((s,m)=>s+m.total,0);const totalNew=data.reduce((s,m)=>s+m.newP,0);const totalDays=data.reduce((s,m)=>s+m.openDays,0);const avgDay=totalRev/totalDays;const arpu=totalRev/totalPat;const newRate=(totalNew/totalPat*100).toFixed(1);document.getElementById('kpi-total-rev').innerHTML=fmt(totalRev)+'<span class="unit"> บาท</span>';document.getElementById('kpi-total-rev-sub').textContent=data[0].label+' – '+data[data.length-1].label;document.getElementById('kpi-total-patients').innerHTML=fmt(totalPat)+'<span class="unit"> ราย</span>';document.getElementById('kpi-new-rate').textContent='คนไข้ใหม่ '+newRate+'%';document.getElementById('kpi-avg-day').innerHTML=fmt(avgDay)+'<span class="unit"> บาท</span>';document.getElementById('kpi-avg-day-sub').textContent='จาก '+totalDays+' วันทำการ';document.getElementById('kpi-arpu').innerHTML=fmt(arpu)+'<span class="unit"> บาท</span>';document.getElementById('p-total').innerHTML=fmt(totalPat)+'<span class="unit"> ราย</span>';document.getElementById('p-new').innerHTML=fmt(totalNew)+'<span class="unit"> ราย</span>';document.getElementById('p-old').innerHTML=fmt(totalPat-totalNew)+'<span class="unit"> ราย</span>';document.getElementById('p-rate').innerHTML=newRate+'<span class="unit">%</span>';}
+function renderRevenueTrend(){const data=getFilteredData();let values,lbl;if(state.trend==='cumulative'){let sum=0;values=data.map(m=>sum+=m.revenue);lbl='รายได้สะสม';}else{values=data.map(m=>m.revenue);lbl='รายได้';}if(charts.revenueTrend)charts.revenueTrend.destroy();charts.revenueTrend=new Chart(document.getElementById('revenueTrendChart'),{type:'line',data:{labels:data.map(m=>m.label),datasets:[{label:lbl,data:values,borderColor:COLORS.primary,backgroundColor:ctx=>makeGradient(ctx,COLORS.primary),tension:.4,fill:true,pointBackgroundColor:'white',pointBorderColor:COLORS.primary,pointBorderWidth:2,pointRadius:6,pointHoverRadius:9,borderWidth:3}]},options:{responsive:true,maintainAspectRatio:false,onClick:(e,els)=>{if(els.length===0)return;showMonthDetail(data[els[0].index]);},plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>'  '+fmtBaht(ctx.parsed.y)}}},scales:{x:{grid:{display:false}},y:{beginAtZero:true,ticks:{callback:v=>fmt(v)},grid:{color:'rgba(225,232,239,.6)'}}}}});}
+function showMonthDetail(m){const card=document.getElementById('monthDetail');document.getElementById('detailTitle').textContent='📅 รายละเอียดเดือน '+m.label;document.getElementById('detailGrid').innerHTML=`<div class="item"><div class="lbl">💰 รายได้</div><div class="val">${fmtBaht(m.revenue)}</div></div><div class="item"><div class="lbl">📅 วันทำการ</div><div class="val">${m.openDays} วัน</div></div><div class="item"><div class="lbl">💵 เฉลี่ย/วัน</div><div class="val">${fmtBaht(m.perDay)}</div></div><div class="item"><div class="lbl">👥 คนไข้รวม</div><div class="val">${m.total} ราย</div></div><div class="item"><div class="lbl">🆕 คนไข้ใหม่</div><div class="val">${m.newP} ราย</div></div><div class="item"><div class="lbl">🔁 คนไข้เก่า</div><div class="val">${m.oldP} ราย</div></div><div class="item"><div class="lbl">📊 รายได้/คนไข้</div><div class="val">${fmtBaht(m.revenue/m.total)}</div></div><div class="item"><div class="lbl">% คนไข้ใหม่</div><div class="val">${(m.newP/m.total*100).toFixed(1)}%</div></div>`;card.classList.add('show');}
+function renderPatientChart(){const data=getFilteredData();if(charts.patient)charts.patient.destroy();const stacked=state.patientView==='stacked';charts.patient=new Chart(document.getElementById('patientChart'),{type:'bar',data:{labels:data.map(m=>m.label),datasets:[{label:'คนไข้เก่า',data:data.map(m=>m.oldP),backgroundColor:COLORS.primaryLight,borderRadius:4},{label:'คนไข้ใหม่',data:data.map(m=>m.newP),backgroundColor:COLORS.orange,borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',align:'end'}},scales:{x:{stacked,grid:{display:false}},y:{stacked,beginAtZero:true,grid:{color:'rgba(225,232,239,.6)'}}}}});}
+function renderAvgDayChart(){const data=getFilteredData();if(charts.avgDay)charts.avgDay.destroy();charts.avgDay=new Chart(document.getElementById('avgDayChart'),{type:'bar',data:{labels:data.map(m=>m.label),datasets:[{label:'รายได้เฉลี่ย/วัน',data:data.map(m=>m.perDay),backgroundColor:data.map((_,i)=>i===data.length-1?COLORS.green:COLORS.greenLight),borderRadius:6,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>'  '+fmtBaht(ctx.parsed.y)+' / วัน'}}},scales:{x:{grid:{display:false}},y:{beginAtZero:true,ticks:{callback:v=>fmt(v)},grid:{color:'rgba(225,232,239,.6)'}}}}});}
+function renderYoYChart(){if(charts.yoy)charts.yoy.destroy();const months=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];const d2568=new Array(12).fill(0),d2569=new Array(12).fill(0);monthlyData.forEach(m=>{const idx=parseInt(m.ym.split('-')[1])-1;if(m.year==='2568')d2568[idx]=m.revenue;else d2569[idx]=m.revenue;});charts.yoy=new Chart(document.getElementById('yoyChart'),{type:'bar',data:{labels:months,datasets:[{label:'ปี 2568',data:d2568,backgroundColor:COLORS.gray,borderRadius:6},{label:'ปี 2569',data:d2569,backgroundColor:COLORS.primary,borderRadius:6}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',align:'end'},tooltip:{callbacks:{label:ctx=>'  '+ctx.dataset.label+': '+fmtBaht(ctx.parsed.y)}}},scales:{x:{grid:{display:false}},y:{beginAtZero:true,ticks:{callback:v=>fmt(v)},grid:{color:'rgba(225,232,239,.6)'}}}}});}
+function renderGrowthChart(){if(charts.growth)charts.growth.destroy();const data=getFilteredData();const growth=data.map((m,i)=>i===0?0:((m.revenue-data[i-1].revenue)/data[i-1].revenue*100));charts.growth=new Chart(document.getElementById('growthChart'),{type:'bar',data:{labels:data.map(m=>m.label),datasets:[{label:'การเติบโต %',data:growth,backgroundColor:growth.map(v=>v>=0?COLORS.green:COLORS.rose),borderRadius:6,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>'  '+ctx.parsed.y.toFixed(1)+'%'}}},scales:{x:{grid:{display:false}},y:{ticks:{callback:v=>v+'%'},grid:{color:'rgba(225,232,239,.6)'}}}}});}
+function renderRevenueTable(){const data=[...getFilteredData()];const{key,dir}=state.revSort;data.sort((a,b)=>{const av=a[key],bv=b[key];if(typeof av==='string')return dir==='asc'?av.localeCompare(bv):bv.localeCompare(av);return dir==='asc'?av-bv:bv-av;});document.getElementById('revenueTableBody').innerHTML=data.map(m=>`<tr><td><strong>${m.label}</strong></td><td class="right">${fmt(m.revenue)}</td><td class="right">${fmt(m.perDay)}</td><td class="right">${m.openDays}</td><td class="right">${m.total}</td><td class="right">${m.newP}</td></tr>`).join('');document.querySelectorAll('#revenueTable th').forEach(th=>{th.classList.remove('sort-asc','sort-desc');if(th.dataset.sort===key)th.classList.add('sort-'+dir);});}
+function renderPatientTotalChart(){if(charts.patientTotal)charts.patientTotal.destroy();const data=getFilteredData();charts.patientTotal=new Chart(document.getElementById('patientTotalChart'),{type:'line',data:{labels:data.map(m=>m.label),datasets:[{label:'คนไข้รวม',data:data.map(m=>m.total),borderColor:COLORS.purple,backgroundColor:'rgba(157,123,183,.15)',tension:.4,fill:true,pointBackgroundColor:'white',pointBorderColor:COLORS.purple,pointBorderWidth:2,pointRadius:5,borderWidth:3}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false}},y:{beginAtZero:true,grid:{color:'rgba(225,232,239,.6)'}}}}});}
+function renderPatientRatioChart(){if(charts.patientRatio)charts.patientRatio.destroy();const data=getFilteredData();const totalNew=data.reduce((s,m)=>s+m.newP,0),totalOld=data.reduce((s,m)=>s+m.oldP,0);charts.patientRatio=new Chart(document.getElementById('patientRatioChart'),{type:'doughnut',data:{labels:['คนไข้ใหม่','คนไข้เก่า'],datasets:[{data:[totalNew,totalOld],backgroundColor:[COLORS.orange,COLORS.primaryLight],borderWidth:3,borderColor:'white'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'right'},tooltip:{callbacks:{label:ctx=>'  '+ctx.label+': '+fmt(ctx.parsed)+' ราย'}}},cutout:'65%'}});}
+function renderNewPatientTrendChart(){if(charts.newPatient)charts.newPatient.destroy();const data=getFilteredData();charts.newPatient=new Chart(document.getElementById('newPatientTrendChart'),{type:'line',data:{labels:data.map(m=>m.label),datasets:[{label:'คนไข้ใหม่',data:data.map(m=>m.newP),borderColor:COLORS.orange,backgroundColor:ctx=>makeGradient(ctx,COLORS.orange),tension:.4,fill:true,pointBackgroundColor:'white',pointBorderColor:COLORS.orange,pointBorderWidth:2,pointRadius:5,borderWidth:3}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false}},y:{beginAtZero:true,grid:{color:'rgba(225,232,239,.6)'}}}}});}
+function renderTopServiceChart(){if(charts.topService)charts.topService.destroy();const top10=[...allServices].sort((a,b)=>state.serviceView==='revenue'?b.sum-a.sum:b.qty-a.qty).slice(0,10);charts.topService=new Chart(document.getElementById('topServiceChart'),{type:'bar',data:{labels:top10.map(s=>s.name.length>32?s.name.slice(0,30)+'…':s.name),datasets:[{label:state.serviceView==='revenue'?'รายได้':'จำนวน',data:top10.map(s=>state.serviceView==='revenue'?s.sum:s.qty),backgroundColor:top10.map((_,i)=>[COLORS.primary,COLORS.green,COLORS.orange,COLORS.purple,COLORS.rose][i%5]),borderRadius:6,borderSkipped:false}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>'  '+(state.serviceView==='revenue'?fmtBaht(ctx.parsed.x):fmt(ctx.parsed.x)+' ครั้ง')}}},scales:{x:{beginAtZero:true,ticks:{callback:v=>fmt(v)},grid:{color:'rgba(225,232,239,.6)'}},y:{grid:{display:false}}}}});}
+function renderAllServices(){const search=state.svcSearch.toLowerCase().trim();let filtered=allServices.filter(s=>s.name.toLowerCase().includes(search));const[key,dir]=state.svcSort.split('-');filtered.sort((a,b)=>dir==='desc'?b[key]-a[key]:a[key]-b[key]);document.getElementById('svc-count').textContent=filtered.length+' รายการ';const max=filtered.length?Math.max(...filtered.map(s=>s.sum)):1;if(filtered.length===0){document.getElementById('allSvcBody').innerHTML='<tr class="empty-row"><td colspan="5">ไม่พบรายการ</td></tr>';return;}document.getElementById('allSvcBody').innerHTML=filtered.map((s,i)=>{const pct=(s.sum/max)*100;return`<tr><td><span class="rank">${i+1}</span></td><td>${s.name}</td><td class="right">${fmt(s.price)}</td><td class="right">${fmt(s.qty)}</td><td class="right bar-cell" style="--w:${pct}%"><strong>${fmt(s.sum)}</strong></td></tr>`;}).join('');}
+function renderMonthlySvc(){const grid=document.getElementById('monthlySvcGrid');const orderedKeys=Object.keys(monthlyTopSvc).sort();grid.innerHTML=orderedKeys.map(ym=>{const md=monthlyData.find(m=>m.ym===ym);const services=monthlyTopSvc[ym];const max=Math.max(...services.map(s=>s.qty));return `<div class="month-card"><h4>${md?md.label:ym}<span class="sum">${md?md.total+' คนไข้':''}</span></h4>${services.map((s,i)=>`<div class="svc-bar rank-${i+1}"><div class="name">${i+1}. ${s.name}</div><div class="gauge"><div class="fill" style="width:${(s.qty/max)*100}%"></div></div><div class="qty">${s.qty}</div></div>`).join('')}</div>`;}).join('');const trackedNames=['ultrasound2D-transvagina','ตรวจภายใน','ultrasound2D-ANC follow up'];const xLabels=orderedKeys.map(ym=>monthlyData.find(m=>m.ym===ym)?.label||ym);const datasets=trackedNames.map((name,i)=>({label:name,data:orderedKeys.map(ym=>{const svc=(monthlyTopSvc[ym]||[]).find(s=>s.name===name);return svc?svc.qty:0;}),borderColor:[COLORS.primary,COLORS.green,COLORS.orange][i],backgroundColor:[COLORS.primary,COLORS.green,COLORS.orange][i]+'20',tension:.4,fill:false,pointRadius:4,borderWidth:3}));if(charts.trendTopSvc)charts.trendTopSvc.destroy();charts.trendTopSvc=new Chart(document.getElementById('trendTopSvcChart'),{type:'line',data:{labels:xLabels,datasets},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',align:'center'}},scales:{x:{grid:{display:false}},y:{beginAtZero:true,grid:{color:'rgba(225,232,239,.6)'}}}}});if(charts.monthlyTopRev)charts.monthlyTopRev.destroy();const topPerMonth=orderedKeys.map(ym=>{const s=monthlyTopSvc[ym][0];return{label:monthlyData.find(m=>m.ym===ym)?.label||ym,name:s.name,qty:s.qty};});charts.monthlyTopRev=new Chart(document.getElementById('monthlyTopRevChart'),{type:'bar',data:{labels:topPerMonth.map(t=>t.label),datasets:[{label:'จำนวนครั้ง',data:topPerMonth.map(t=>t.qty),backgroundColor:topPerMonth.map(t=>{const c={'ultrasound2D-transvagina':COLORS.primary,'ตรวจภายใน':COLORS.green,'ค่าตรวจรักษา':COLORS.orange};return c[t.name]||COLORS.purple;}),borderRadius:6}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{title:ctx=>topPerMonth[ctx[0].dataIndex].name,label:ctx=>'  '+ctx.parsed.y+' ครั้ง ('+topPerMonth[ctx.dataIndex].label+')'}}},scales:{x:{grid:{display:false}},y:{beginAtZero:true,grid:{color:'rgba(225,232,239,.6)'}}}}});}
+function initDailyData(){const lb1=document.getElementById('live-badge-1');const lb2=document.getElementById('live-badge-2');const billStatus=document.getElementById('bill-status');dailyData=[];for(const ym in dailyByMonth){const[y,m]=ym.split('-').map(Number);for(const[day,newP,repeat] of dailyByMonth[ym]){const date=`${y}-${String(m).padStart(2,'0')}-${String(day).padStart(2,'0')}`;dailyData.push({date,patients:newP+repeat,newP,oldP:repeat,dow:new Date(date+'T00:00:00').getDay(),ym});}}dailyData.sort((a,b)=>a.date.localeCompare(b.date));dowByMonth=computeDowByMonth(dailyData);lb1.textContent=dailyData.length+' วันทำการ';lb2.textContent='5 เดือน';billStatus.innerHTML=' • <span style="color:#82E5B0">●</span> ข้อมูลรายวันจาก patient2026 ('+dailyData.length+' วัน)';renderDailyTab();}
+function computeDowByMonth(daily){const result={};for(const d of daily){const[y,m]=d.ym.split('-').map(Number);const ymKey=`${y+543}-${String(m).padStart(2,'0')}`;if(!result[ymKey])result[ymKey]={dowArr:[[],[],[],[],[],[],[]],dates:[],total:0};result[ymKey].dowArr[d.dow].push(d.patients);result[ymKey].dates.push(d);result[ymKey].total+=d.patients;}for(const k of Object.keys(result)){const r=result[k];r.dowAvg=r.dowArr.map(arr=>arr.length?arr.reduce((a,b)=>a+b,0)/arr.length:0);r.dowCount=r.dowArr.map(arr=>arr.length);let maxIdx=0,minIdx=-1,maxV=-1,minV=Infinity;r.dowAvg.forEach((v,i)=>{if(v>maxV){maxV=v;maxIdx=i;}if(v>0&&v<minV){minV=v;minIdx=i;}});r.maxDow=maxIdx;r.minDow=minIdx>=0?minIdx:maxIdx;}return result;}
+function getFilteredDailyData(){if(!dailyData)return[];const buddhYM=d=>{const[y,m]=d.ym.split('-').map(Number);return`${y+543}-${String(m).padStart(2,'0')}`;};if(state.range&&state.range.startsWith('month:')){const sel=state.range.slice(6);return dailyData.filter(d=>buddhYM(d)===sel);}if(state.range==='2568')return[];if(state.range==='2569')return dailyData.filter(d=>buddhYM(d).startsWith('2569-'));if(state.range==='6mo'||state.range==='3mo'){const filteredMonthly=getFilteredData();const ymSet=new Set(filteredMonthly.map(m=>m.ym));return dailyData.filter(d=>ymSet.has(buddhYM(d)));}return dailyData;}
+function renderDailyKPIs(){if(!dailyData)return;const data=getFilteredDailyData();const elAvg=document.getElementById('kpi-avg-patient-day');const elMax=document.getElementById('kpi-max-day');const elMaxV=document.getElementById('kpi-max-day-val');const elMin=document.getElementById('kpi-min-day');const elMinV=document.getElementById('kpi-min-day-val');const elDays=document.getElementById('kpi-total-days');if(data.length===0){elAvg.innerHTML='—';elMax.innerHTML='—';elMaxV.textContent='ไม่มีข้อมูลรายวัน';elMin.innerHTML='—';elMinV.textContent='ไม่มีข้อมูลรายวัน';elDays.innerHTML='0<span class="unit"> วัน</span>';if(charts.dailyTimeline)charts.dailyTimeline.destroy();charts.dailyTimeline=null;return;}const totalPatients=data.reduce((s,d)=>s+d.patients,0);const totalDays=data.length;const avg=totalPatients/totalDays;let maxDay=data[0],minDay=data[0];for(const d of data){if(d.patients>maxDay.patients)maxDay=d;if(d.patients<minDay.patients)minDay=d;}elAvg.innerHTML=avg.toFixed(1)+'<span class="unit"> ราย</span>';elMax.innerHTML=fmt(maxDay.patients)+'<span class="unit"> ราย</span>';elMaxV.textContent=formatDateThai(maxDay.date)+' ('+DOW_FULL[maxDay.dow]+')';elMin.innerHTML=fmt(minDay.patients)+'<span class="unit"> ราย</span>';elMinV.textContent=formatDateThai(minDay.date)+' ('+DOW_FULL[minDay.dow]+')';elDays.innerHTML=fmt(totalDays)+'<span class="unit"> วัน</span>';if(charts.dailyTimeline)charts.dailyTimeline.destroy();charts.dailyTimeline=new Chart(document.getElementById('dailyTimelineChart'),{type:'line',data:{labels:data.map(d=>d.date),datasets:[{label:'คนไข้/วัน',data:data.map(d=>d.patients),borderColor:COLORS.purple,backgroundColor:ctx=>makeGradient(ctx,COLORS.purple),tension:.3,fill:true,pointRadius:data.length<40?4:2,pointHoverRadius:6,borderWidth:2}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{title:ctx=>formatDateThai(ctx[0].label),label:ctx=>'  '+ctx.parsed.y+' ราย ('+DOW_FULL[new Date(ctx.label+'T00:00:00').getDay()]+')'}}},scales:{x:{ticks:{maxRotation:60,autoSkip:true,maxTicksLimit:20},grid:{display:false}},y:{beginAtZero:true,grid:{color:'rgba(225,232,239,.6)'}}}}});}
+function renderDailyTab(){if(!dailyData||!dowByMonth)return;renderDailyKPIs();const months=Object.keys(dowByMonth).sort();const selector=document.getElementById('dowMonthSelector');selector.innerHTML=months.map(m=>{const md=monthlyData.find(x=>x.ym===m);return `<button class="month-chip" data-month="${m}">${md?md.label:m}</button>`;}).join('');selector.querySelectorAll('.month-chip').forEach(btn=>btn.addEventListener('click',()=>{state.dowMonth=btn.dataset.month;selector.querySelectorAll('.month-chip').forEach(b=>b.classList.remove('active'));btn.classList.add('active');renderDowMonth();}));state.dowMonth=months[months.length-1];if(selector.querySelector(`[data-month="${state.dowMonth}"]`))selector.querySelector(`[data-month="${state.dowMonth}"]`).classList.add('active');renderDowMonth();renderDowSummaryTable();}
+function renderDowMonth(){if(!dowByMonth||!state.dowMonth)return;const r=dowByMonth[state.dowMonth];if(!r)return;if(charts.dow)charts.dow.destroy();charts.dow=new Chart(document.getElementById('dowChart'),{type:'bar',data:{labels:DOW_FULL,datasets:[{label:'คนไข้เฉลี่ย',data:r.dowAvg.map(v=>v.toFixed(1)),backgroundColor:r.dowAvg.map((v,i)=>i===r.maxDow?COLORS.green:i===r.minDow&&v>0?COLORS.orange:COLORS.primaryLight),borderRadius:8}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>'  '+ctx.parsed.y+' ราย (เฉลี่ยจาก '+r.dowCount[ctx.dataIndex]+' วัน)'}}},scales:{x:{grid:{display:false}},y:{beginAtZero:true,grid:{color:'rgba(225,232,239,.6)'}}}}});const grid=document.getElementById('dowGrid');grid.innerHTML=DOW_NAMES.map((n,i)=>{let cls='';if(r.dowAvg[i]===0)cls='zero';else if(i===r.maxDow)cls='max';else if(i===r.minDow)cls='min';return `<div class="dow-cell ${cls}"><div class="dow-name">${n}</div><div class="dow-val">${r.dowAvg[i].toFixed(1)}</div><div class="dow-unit">${r.dowCount[i]} วัน</div></div>`;}).join('');}
+function renderDowSummaryTable(){if(!dowByMonth)return;const months=Object.keys(dowByMonth).sort();document.getElementById('dowSummaryBody').innerHTML=months.map(m=>{const r=dowByMonth[m];const md=monthlyData.find(x=>x.ym===m);const maxN=DOW_NAMES[r.maxDow]+'. ('+r.dowAvg[r.maxDow].toFixed(1)+')';const minN=r.dowAvg[r.minDow]>0?DOW_NAMES[r.minDow]+'. ('+r.dowAvg[r.minDow].toFixed(1)+')':'—';return `<tr><td><strong>${md?md.label:m}</strong></td>${r.dowAvg.map((v,i)=>`<td class="right" style="${i===r.maxDow?'background:#E6F4ED;color:#2A8E5F;font-weight:700':i===r.minDow&&v>0?'background:#FDF1E5;color:#B86F36;font-weight:700':''}">${v>0?v.toFixed(1):'—'}</td>`).join('')}<td class="right" style="color:#2A8E5F;font-weight:600">${maxN}</td><td class="right" style="color:#B86F36;font-weight:600">${minN}</td></tr>`;}).join('');}
+function formatDateThai(d){const[y,m,dd]=d.split('-');const months=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];return parseInt(dd)+' '+months[parseInt(m)-1]+' '+(parseInt(y)+543).toString().slice(-2);}
+function renderFbChart(){if(charts.fb)charts.fb.destroy();charts.fb=new Chart(document.getElementById('fbViewsChart'),{type:'line',data:{labels:fbWeekly.map(w=>w.wk),datasets:[{label:'ยอดดู',data:fbWeekly.map(w=>w.views),borderColor:COLORS.primary,backgroundColor:ctx=>makeGradient(ctx,COLORS.primary),tension:.35,fill:true,pointRadius:3,borderWidth:2.5},{label:'ผู้ชม',data:fbWeekly.map(w=>w.viewers),borderColor:COLORS.orange,backgroundColor:'transparent',tension:.35,fill:false,pointRadius:3,borderWidth:2.5}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',align:'end'}},scales:{x:{grid:{display:false},ticks:{maxRotation:60,minRotation:45,autoSkip:true}},y:{beginAtZero:true,ticks:{callback:v=>fmt(v)},grid:{color:'rgba(225,232,239,.6)'}}}}});}
+function renderTtChart(){if(charts.tt)charts.tt.destroy();charts.tt=new Chart(document.getElementById('ttViewsChart'),{type:'bar',data:{labels:ttWeekly.map(w=>w.wk),datasets:[{label:'ยอดชม',data:ttWeekly.map(w=>w.views),backgroundColor:COLORS.purpleLight,borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{maxRotation:60,minRotation:45,autoSkip:true}},y:{beginAtZero:true,ticks:{callback:v=>fmt(v)},grid:{color:'rgba(225,232,239,.6)'}}}}});}
+function renderLineChart(){if(charts.line)charts.line.destroy();charts.line=new Chart(document.getElementById('lineChart'),{type:'bar',data:{labels:lineWeekly.map(w=>w.wk),datasets:[{label:'จากลิงก์',data:lineWeekly.map(w=>w.link),backgroundColor:COLORS.green,borderRadius:4},{label:'จากโปสเตอร์',data:lineWeekly.map(w=>w.poster),backgroundColor:COLORS.greenLight,borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',align:'end'}},scales:{x:{stacked:true,grid:{display:false},ticks:{maxRotation:60,minRotation:45,autoSkip:true}},y:{stacked:true,beginAtZero:true,grid:{color:'rgba(225,232,239,.6)'}}}}});}
+function renderAll(){renderKPIs();renderRevenueTrend();renderPatientChart();renderAvgDayChart();renderPatientTotalChart();renderPatientRatioChart();renderNewPatientTrendChart();renderGrowthChart();renderRevenueTable();if(dailyData)renderDailyKPIs();}
+document.getElementById('rangeChips').addEventListener('click',e=>{if(!e.target.matches('.chip'))return;document.querySelectorAll('#rangeChips .chip').forEach(c=>c.classList.remove('active'));e.target.classList.add('active');state.range=e.target.dataset.range;document.getElementById('monthSelect').value='';document.getElementById('monthDetail').classList.remove('show');renderAll();});
+(function(){const sel=document.getElementById('monthSelect');monthlyData.forEach(m=>{const opt=document.createElement('option');opt.value=m.ym;opt.textContent=m.label;sel.appendChild(opt);});sel.addEventListener('change',e=>{const v=e.target.value;if(v){state.range='month:'+v;document.querySelectorAll('#rangeChips .chip').forEach(c=>c.classList.remove('active'));}else{state.range='all';document.querySelector('#rangeChips .chip[data-range="all"]').classList.add('active');}document.getElementById('monthDetail').classList.remove('show');renderAll();});})();
+document.getElementById('tabBar').addEventListener('click',e=>{if(!e.target.matches('.tab'))return;document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));e.target.classList.add('active');document.querySelectorAll('.tab-pane').forEach(p=>p.classList.remove('active'));document.getElementById('tab-'+e.target.dataset.tab).classList.add('active');setTimeout(()=>Object.values(charts).forEach(c=>c&&c.resize&&c.resize()),60);});
+document.querySelectorAll('[data-trend]').forEach(btn=>btn.addEventListener('click',()=>{document.querySelectorAll('[data-trend]').forEach(b=>b.classList.remove('active'));btn.classList.add('active');state.trend=btn.dataset.trend;renderRevenueTrend();}));
+document.querySelectorAll('[data-patient]').forEach(btn=>btn.addEventListener('click',()=>{document.querySelectorAll('[data-patient]').forEach(b=>b.classList.remove('active'));btn.classList.add('active');state.patientView=btn.dataset.patient;renderPatientChart();}));
+document.querySelectorAll('[data-svc]').forEach(btn=>btn.addEventListener('click',()=>{document.querySelectorAll('[data-svc]').forEach(b=>b.classList.remove('active'));btn.classList.add('active');state.serviceView=btn.dataset.svc;renderTopServiceChart();}));
+document.getElementById('svcSearch').addEventListener('input',e=>{state.svcSearch=e.target.value;renderAllServices();});
+document.getElementById('svcSort').addEventListener('change',e=>{state.svcSort=e.target.value;renderAllServices();});
+document.querySelectorAll('#revenueTable th[data-sort]').forEach(th=>th.addEventListener('click',()=>{const k=th.dataset.sort;if(state.revSort.key===k)state.revSort.dir=state.revSort.dir==='asc'?'desc':'asc';else{state.revSort.key=k;state.revSort.dir='desc';}renderRevenueTable();}));
+document.addEventListener('DOMContentLoaded',()=>{renderAll();renderTopServiceChart();renderAllServices();renderYoYChart();renderFbChart();renderTtChart();renderLineChart();renderMonthlySvc();initDailyData();});
+</script></body></html>
