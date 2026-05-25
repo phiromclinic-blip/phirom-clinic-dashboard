@@ -1,600 +1,879 @@
 <!DOCTYPE html>
-<html lang="th"><head><meta charset="UTF-8"><title>แดชบอร์ดภิรมย์คลินิก (Interactive)</title>
+<html lang="th"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ภิรมย์คลินิก — Executive Dashboard</title>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.0/dist/chart.umd.js"></script>
 <style>
-:root{color-scheme:dark}
+:root{color-scheme:dark;--bg:#0b0d1e;--bg2:#111327;--bg3:#1a1c2e;--border:rgba(255,255,255,.07);--text:#e2e8f0;--muted:#94a3b8;--dim:#475569;--dimmer:#334155;--cyan:#22d3ee;--green:#34d399;--orange:#fb923c;--purple:#a78bfa;--rose:#f472b6;--yellow:#fbbf24;--red:#f87171}
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'Sarabun','Tahoma','Segoe UI',sans-serif;background:#0b0d1e;color:#e2e8f0;min-height:100vh;padding:20px;line-height:1.5}
-::-webkit-scrollbar{width:6px;height:6px}::-webkit-scrollbar-track{background:rgba(255,255,255,.02)}::-webkit-scrollbar-thumb{background:rgba(255,255,255,.1);border-radius:3px}::-webkit-scrollbar-thumb:hover{background:rgba(255,255,255,.2)}
-.dashboard{max-width:1400px;margin:0 auto}
-.header{background:linear-gradient(135deg,#13112b 0%,#0d1535 50%,#0a1a3a 100%);color:white;padding:24px 28px;border-radius:16px;margin-bottom:16px;box-shadow:0 4px 32px rgba(99,102,241,.2);border:1px solid rgba(129,140,248,.18)}
-.header h1{font-size:24px;font-weight:700;text-shadow:0 0 30px rgba(129,140,248,.6)}
-.header .subtitle{font-size:13px;color:#a5b4fc;margin-top:4px}
-.status-bar{display:flex;align-items:center;gap:8px;margin-top:10px;font-size:12px;color:#64748b;flex-wrap:wrap}
-.status-dot{width:8px;height:8px;border-radius:50%;background:#34d399;box-shadow:0 0 8px #34d399;animation:pulse 2s ease-in-out infinite}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
-.filter-bar{background:#111327;border-radius:14px;padding:14px 18px;margin-bottom:16px;box-shadow:0 2px 16px rgba(0,0,0,.4);display:flex;flex-wrap:wrap;gap:12px;align-items:center;border:1px solid rgba(255,255,255,.06)}
-.filter-label{font-size:12px;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:.5px}
-.chip-group{display:flex;flex-wrap:wrap;gap:6px}
-.chip{padding:7px 14px;border-radius:20px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);color:#64748b;font-size:13px;font-weight:500;cursor:pointer;transition:all .2s;font-family:inherit}
-.chip:hover{background:rgba(255,255,255,.09);color:#94a3b8;border-color:rgba(255,255,255,.15)}
-.chip.active{background:linear-gradient(135deg,#4f46e5,#7c3aed);color:white;border-color:transparent;box-shadow:0 2px 14px rgba(99,102,241,.45)}
-.tabs{display:flex;gap:4px;background:#111327;border-radius:14px;padding:6px;margin-bottom:16px;box-shadow:0 2px 16px rgba(0,0,0,.4);overflow-x:auto;border:1px solid rgba(255,255,255,.06)}
-.tab{padding:10px 16px;border:none;background:transparent;color:#475569;font-size:13px;font-weight:600;cursor:pointer;border-radius:10px;transition:all .2s;font-family:inherit;white-space:nowrap}
-.tab:hover{background:rgba(255,255,255,.06);color:#94a3b8}
-.tab.active{background:linear-gradient(135deg,#4f46e5,#7c3aed);color:white;box-shadow:0 2px 14px rgba(99,102,241,.4)}
-.tab-pane{display:none;animation:fadeIn .35s ease}.tab-pane.active{display:block}
-@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
-.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin-bottom:18px}
-.kpi-card{border-radius:14px;padding:20px;border:1px solid rgba(255,255,255,.07);transition:all .25s;position:relative;overflow:hidden}
-.kpi-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;border-radius:14px 14px 0 0;background:var(--accent-grad,linear-gradient(90deg,#818cf8,#22d3ee))}
-.kpi-card:hover{transform:translateY(-3px)}
-.kpi-card .label{font-size:13px;color:#94a3b8;font-weight:500;margin-bottom:8px}
-.kpi-card .value{font-size:26px;font-weight:700}
-.kpi-card .unit{font-size:13px;color:#64748b;font-weight:500;margin-left:4px}
-.kpi-card .delta{font-size:12px;margin-top:6px;padding:3px 10px;border-radius:6px;display:inline-block;font-weight:600}
-.delta.up{background:rgba(52,211,153,.14);color:#34d399}.delta.neutral{background:rgba(148,163,184,.1);color:#64748b}.delta.down{background:rgba(248,113,113,.14);color:#f87171}
-.kpi-card.blue{background:linear-gradient(135deg,#0d1e3a,#0f2847);--accent-grad:linear-gradient(90deg,#22d3ee,#3b82f6);box-shadow:0 4px 24px rgba(34,211,238,.1)}
-.kpi-card.blue .value{color:#22d3ee;text-shadow:0 0 20px rgba(34,211,238,.4)}
-.kpi-card.green{background:linear-gradient(135deg,#0a2018,#0d2f22);--accent-grad:linear-gradient(90deg,#34d399,#10b981);box-shadow:0 4px 24px rgba(52,211,153,.1)}
-.kpi-card.green .value{color:#34d399;text-shadow:0 0 20px rgba(52,211,153,.4)}
-.kpi-card.orange{background:linear-gradient(135deg,#251508,#321d0a);--accent-grad:linear-gradient(90deg,#fb923c,#f59e0b);box-shadow:0 4px 24px rgba(251,146,60,.1)}
-.kpi-card.orange .value{color:#fb923c;text-shadow:0 0 20px rgba(251,146,60,.4)}
-.kpi-card.purple{background:linear-gradient(135deg,#170d2e,#1f1040);--accent-grad:linear-gradient(90deg,#a78bfa,#818cf8);box-shadow:0 4px 24px rgba(167,139,250,.1)}
-.kpi-card.purple .value{color:#a78bfa;text-shadow:0 0 20px rgba(167,139,250,.4)}
-.section{background:#111327;border-radius:14px;padding:22px;margin-bottom:16px;box-shadow:0 2px 20px rgba(0,0,0,.35);border:1px solid rgba(255,255,255,.06)}
-.section-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:10px}
-.section h2{font-size:16px;font-weight:700;color:#e2e8f0;display:flex;align-items:center;gap:8px}
-.section h2::before{content:'';width:4px;height:18px;background:linear-gradient(180deg,#818cf8,#22d3ee);border-radius:2px;box-shadow:0 0 8px rgba(129,140,248,.5)}
-.section .desc{font-size:12px;color:#475569;margin-bottom:14px}
-.row-2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
-@media(max-width:900px){.row-2{grid-template-columns:1fr}}
-.chart-container{position:relative;height:320px;width:100%}.chart-tall{height:380px}
-.toggle-group{display:flex;background:rgba(255,255,255,.04);padding:3px;border-radius:8px;border:1px solid rgba(255,255,255,.07)}
-.toggle-btn{padding:5px 12px;border:none;background:transparent;color:#475569;font-size:12px;font-weight:600;cursor:pointer;border-radius:6px;transition:all .2s;font-family:inherit}
-.toggle-btn.active{background:rgba(129,140,248,.2);color:#818cf8;box-shadow:0 1px 4px rgba(0,0,0,.3)}
-.detail-card{background:#1a1c2e;border:1px solid rgba(129,140,248,.18);border-radius:12px;padding:16px 18px;margin-top:14px;display:none}
-.detail-card.show{display:block}
-.detail-card .title{font-size:14px;font-weight:700;color:#e2e8f0;margin-bottom:10px}
-.detail-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px}
-.detail-grid .item{background:rgba(255,255,255,.04);padding:10px 12px;border-radius:8px;border:1px solid rgba(255,255,255,.06)}
-.detail-grid .item .lbl{font-size:11px;color:#475569}
-.detail-grid .item .val{font-size:16px;font-weight:700;color:#e2e8f0;margin-top:2px}
-.detail-card .close-btn{float:right;background:transparent;border:none;cursor:pointer;color:#475569;font-size:18px}
-.search-box{display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap}
-.search-input{flex:1;min-width:200px;padding:10px 14px;border:1px solid rgba(255,255,255,.08);border-radius:10px;font-size:14px;color:#e2e8f0;font-family:inherit;background:rgba(255,255,255,.04)}
-.search-input::placeholder{color:#334155}
-.search-input:focus{outline:none;border-color:#818cf8;background:rgba(129,140,248,.08);box-shadow:0 0 0 3px rgba(129,140,248,.15)}
-.sort-select{padding:10px 14px;border:1px solid rgba(255,255,255,.08);border-radius:10px;font-size:13px;color:#94a3b8;background:#1a1c2e;cursor:pointer;font-family:inherit}
-.sort-select option{background:#1a1c2e;color:#e2e8f0}
-.service-table{width:100%;border-collapse:collapse;font-size:13px}
-.service-table th{text-align:left;padding:12px 10px;background:rgba(255,255,255,.04);color:#475569;font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.3px;border-bottom:1px solid rgba(255,255,255,.08);cursor:pointer;user-select:none}
-.service-table th.right,.service-table td.right{text-align:right}
-.service-table td{padding:11px 10px;border-bottom:1px solid rgba(255,255,255,.04);color:#cbd5e1}
-.service-table tr:hover td{background:rgba(255,255,255,.03)}
-.service-table .rank{display:inline-block;width:22px;height:22px;background:rgba(129,140,248,.15);border-radius:50%;text-align:center;line-height:22px;font-size:11px;font-weight:700;color:#818cf8}
-.bar-cell{background:linear-gradient(90deg,rgba(34,211,238,.18) var(--w,0%),transparent var(--w,0%));background-size:100% 4px;background-position:bottom;background-repeat:no-repeat;padding-bottom:10px}
-.empty-row td{text-align:center;padding:30px;color:#334155;font-style:italic}
-.insights{background:rgba(255,255,255,.03);border-left:4px solid #818cf8;padding:16px 20px;border-radius:10px;margin-bottom:10px;border:1px solid rgba(255,255,255,.06);border-left-width:4px}
-.insights h3{font-size:14px;color:#e2e8f0;margin-bottom:6px;font-weight:700}
-.insights p{font-size:13px;color:#94a3b8;line-height:1.7}
-.insights .highlight{background:rgba(251,146,60,.15);padding:1px 6px;border-radius:4px;font-weight:600;color:#fb923c}
-.insights.green{border-left-color:#34d399}.insights.green .highlight{background:rgba(52,211,153,.15);color:#34d399}
-.insights.orange{border-left-color:#fb923c}.insights.orange .highlight{background:rgba(251,146,60,.15);color:#fb923c}
-.insights.purple{border-left-color:#a78bfa}.insights.purple .highlight{background:rgba(167,139,250,.15);color:#a78bfa}
-.social-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
-@media(max-width:900px){.social-grid{grid-template-columns:1fr}}
-.social-card{padding:16px;border-radius:12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08)}
-.social-card .platform{font-size:14px;font-weight:700;margin-bottom:12px;color:#e2e8f0}
-.social-card.fb{border-top:3px solid #3b82f6}.social-card.tt{border-top:3px solid #a78bfa}.social-card.ln{border-top:3px solid #34d399}
-.social-stat{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.06);font-size:13px}
-.social-stat:last-child{border-bottom:none}
-.social-stat .lbl{color:#475569}.social-stat .val{font-weight:700;color:#e2e8f0}
-.footer{text-align:center;font-size:12px;color:#334155;padding:12px}
-th.sort-asc::after{content:' ▲';color:#818cf8}th.sort-desc::after{content:' ▼';color:#818cf8}
-.month-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px}
-.month-card{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:12px;padding:14px 16px}
-.month-card h4{font-size:14px;color:#e2e8f0;margin-bottom:10px;font-weight:700;display:flex;justify-content:space-between;align-items:center}
-.month-card h4 .sum{font-size:12px;color:#475569;font-weight:500}
-.svc-bar{display:flex;align-items:center;gap:10px;margin-bottom:8px;font-size:12px}
-.svc-bar .name{color:#cbd5e1;font-weight:500;max-width:60%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.svc-bar .qty{margin-left:auto;color:#22d3ee;font-weight:700}
-.svc-bar .gauge{flex:1;height:6px;background:rgba(255,255,255,.08);border-radius:3px;overflow:hidden}
-.svc-bar .gauge .fill{height:100%;background:linear-gradient(90deg,#818cf8,#22d3ee);border-radius:3px}
-.svc-bar.rank-1 .gauge .fill{background:linear-gradient(90deg,#fb923c,#f59e0b)}
-.svc-bar.rank-2 .gauge .fill{background:linear-gradient(90deg,#34d399,#10b981)}
-.svc-bar.rank-3 .gauge .fill{background:linear-gradient(90deg,#a78bfa,#818cf8)}
-.dow-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;margin-top:14px}
-.dow-cell{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:10px;padding:12px 8px;text-align:center}
-.dow-cell .dow-name{font-size:11px;color:#475569;font-weight:600;text-transform:uppercase}
-.dow-cell .dow-val{font-size:20px;font-weight:700;color:#e2e8f0;margin-top:4px}
-.dow-cell .dow-unit{font-size:10px;color:#334155}
-.dow-cell.max{background:rgba(52,211,153,.1);border-color:rgba(52,211,153,.3)}
-.dow-cell.max .dow-val{color:#34d399;text-shadow:0 0 12px rgba(52,211,153,.5)}
-.dow-cell.min{background:rgba(251,146,60,.1);border-color:rgba(251,146,60,.3)}
-.dow-cell.min .dow-val{color:#fb923c;text-shadow:0 0 12px rgba(251,146,60,.5)}
-.dow-cell.zero .dow-val{color:#1e293b}
-.month-selector{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
-.month-chip{padding:6px 12px;border-radius:16px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);color:#475569;font-size:12px;font-weight:500;cursor:pointer;transition:all .2s;font-family:inherit}
-.month-chip:hover{background:rgba(255,255,255,.09);color:#94a3b8}
-.month-chip.active{background:linear-gradient(135deg,#4f46e5,#7c3aed);color:white;border-color:transparent}
-.live-badge{display:inline-flex;align-items:center;gap:4px;background:rgba(52,211,153,.14);color:#34d399;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600}
-.live-badge::before{content:'●';animation:pulse 1.5s ease-in-out infinite}
-/* === Service Monthly Analysis === */
-.svc-analysis-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;margin-top:4px}
-.svc-m-card{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:12px;padding:14px 16px;transition:all .25s}
-.svc-m-card:hover{border-color:rgba(129,140,248,.25);background:rgba(255,255,255,.06)}
-.svc-m-card.expanded{border-color:rgba(34,211,238,.35);background:rgba(34,211,238,.04);box-shadow:0 0 16px rgba(34,211,238,.08)}
-.svc-m-card.compared{border-color:rgba(167,139,250,.5);box-shadow:0 0 0 1px rgba(167,139,250,.15)}
-.svc-m-name-row{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:5px}
-.svc-m-name{font-size:13px;font-weight:600;color:#e2e8f0;line-height:1.4;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
-.svc-m-stats{display:flex;gap:10px;flex-wrap:wrap;font-size:11px;color:#64748b;margin-bottom:10px}
-.mini-bar-chart{display:flex;align-items:flex-end;height:36px;gap:2px;cursor:pointer;padding:0 1px}
-.mini-bar{flex:1;min-width:3px;background:rgba(255,255,255,.07);border-radius:2px 2px 0 0;transition:height .3s}
-.mini-bar.has-v{background:linear-gradient(180deg,#22d3ee,rgba(34,211,238,.45))}
-.mini-hint{font-size:10px;color:#475569;text-align:center;margin-top:4px}
-.no-monthly-msg{font-size:11px;color:#334155;text-align:center;padding:14px 0;font-style:italic}
-.growth-badge{font-size:11px;font-weight:700;padding:2px 7px;border-radius:6px;white-space:nowrap;flex-shrink:0}
-.growth-badge.up{background:rgba(52,211,153,.15);color:#34d399}
-.growth-badge.down{background:rgba(248,113,113,.15);color:#f87171}
-.svc-m-detail{margin-top:12px;border-top:1px solid rgba(255,255,255,.07);padding-top:12px;display:none}
-.svc-m-detail.open{display:block;animation:fadeIn .25s ease}
-.svc-monthly-tbl{width:100%;border-collapse:collapse;font-size:12px;margin-top:10px}
-.svc-monthly-tbl th{padding:6px 8px;text-align:left;font-size:10px;text-transform:uppercase;color:#475569;border-bottom:1px solid rgba(255,255,255,.07);letter-spacing:.3px}
-.svc-monthly-tbl td{padding:7px 8px;border-bottom:1px solid rgba(255,255,255,.04);color:#cbd5e1}
-.svc-monthly-tbl .right{text-align:right}
-.svc-month-filter{display:flex;flex-wrap:wrap;gap:5px;align-items:center;margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid rgba(255,255,255,.06)}
-.compare-fab{display:none;align-items:center;gap:6px;padding:7px 16px;border-radius:20px;background:linear-gradient(135deg,#4f46e5,#7c3aed);color:white;border:none;cursor:pointer;font-size:13px;font-weight:600;font-family:inherit;box-shadow:0 2px 14px rgba(99,102,241,.4);transition:all .2s}
-.compare-fab:hover{box-shadow:0 4px 20px rgba(99,102,241,.55);transform:translateY(-1px)}
-.svc-compare-wrap{background:rgba(129,140,248,.07);border:1px solid rgba(129,140,248,.2);border-radius:12px;padding:18px;margin-bottom:16px;display:none}
-.svc-view-tab{padding:6px 14px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.04);color:#64748b;font-size:12px;font-weight:600;cursor:pointer;border-radius:8px;transition:all .2s;font-family:inherit}
-.svc-view-tab:hover{color:#94a3b8}
-.svc-view-tab.active{background:rgba(34,211,238,.14);color:#22d3ee;border-color:rgba(34,211,238,.3)}
+body{font-family:'Sarabun','Tahoma','Segoe UI',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding:16px;line-height:1.5}
+::-webkit-scrollbar{width:5px;height:5px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:rgba(255,255,255,.1);border-radius:3px}
+.dash{max-width:1440px;margin:0 auto}
+
+/* HEADER */
+.header{background:linear-gradient(135deg,#13112b,#0d1535,#0a1a3a);padding:20px 24px;border-radius:14px;margin-bottom:12px;box-shadow:0 4px 32px rgba(99,102,241,.18);border:1px solid rgba(129,140,248,.15);display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px}
+.header h1{font-size:22px;font-weight:700;text-shadow:0 0 24px rgba(129,140,248,.5)}
+.header .sub{font-size:12px;color:#a5b4fc;margin-top:3px}
+.status-bar{font-size:11px;color:var(--dim);display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:8px}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 7px var(--green);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+
+/* DATA WARNING PANEL */
+.warn-panel{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+.warn-card{display:flex;align-items:center;gap:7px;padding:9px 14px;border-radius:10px;font-size:12px;font-weight:600;border:1px solid}
+.warn-card.error{background:rgba(248,113,113,.1);border-color:rgba(248,113,113,.3);color:var(--red)}
+.warn-card.warn{background:rgba(251,191,36,.1);border-color:rgba(251,191,36,.3);color:var(--yellow)}
+.warn-card.info{background:rgba(34,211,238,.08);border-color:rgba(34,211,238,.2);color:var(--cyan)}
+.warn-card .icon{font-size:14px}
+
+/* FILTER BAR */
+.filter-bar{background:var(--bg2);border-radius:12px;padding:12px 16px;margin-bottom:12px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;border:1px solid var(--border)}
+.filter-label{font-size:11px;font-weight:700;color:var(--dim);text-transform:uppercase;letter-spacing:.5px}
+.chip-group{display:flex;flex-wrap:wrap;gap:5px}
+.chip{padding:6px 13px;border-radius:18px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);color:var(--dim);font-size:12px;font-weight:500;cursor:pointer;transition:all .2s;font-family:inherit}
+.chip:hover{color:var(--muted);border-color:rgba(255,255,255,.14)}
+.chip.active{background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#fff;border-color:transparent;box-shadow:0 2px 12px rgba(99,102,241,.4)}
+.sort-sel{padding:8px 12px;border:1px solid rgba(255,255,255,.08);border-radius:9px;font-size:12px;color:var(--muted);background:var(--bg3);cursor:pointer;font-family:inherit}
+
+/* TABS */
+.tabs{display:flex;gap:3px;background:var(--bg2);border-radius:12px;padding:5px;margin-bottom:12px;overflow-x:auto;border:1px solid var(--border)}
+.tab{padding:9px 15px;border:none;background:transparent;color:var(--dim);font-size:13px;font-weight:600;cursor:pointer;border-radius:9px;transition:all .2s;font-family:inherit;white-space:nowrap}
+.tab:hover{background:rgba(255,255,255,.05);color:var(--muted)}
+.tab.active{background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#fff;box-shadow:0 2px 12px rgba(99,102,241,.38)}
+.tab-pane{display:none;animation:fadeUp .3s ease}.tab-pane.active{display:block}
+@keyframes fadeUp{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
+
+/* KPI CARDS */
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:14px}
+.kpi-grid-3{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-bottom:14px}
+.kpi{border-radius:13px;padding:18px 20px;border:1px solid var(--border);position:relative;overflow:hidden;transition:transform .2s}
+.kpi::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;border-radius:13px 13px 0 0;background:var(--bar,linear-gradient(90deg,#818cf8,#22d3ee))}
+.kpi:hover{transform:translateY(-2px)}
+.kpi .lbl{font-size:12px;color:var(--muted);font-weight:500;margin-bottom:6px;display:flex;align-items:center;gap:5px}
+.kpi .val{font-size:24px;font-weight:700}
+.kpi .sub{font-size:11px;margin-top:5px;padding:2px 8px;border-radius:5px;display:inline-flex;align-items:center;gap:3px;font-weight:600}
+.kpi.blue{background:linear-gradient(135deg,#0d1e3a,#0f2847);--bar:linear-gradient(90deg,#22d3ee,#3b82f6)}.kpi.blue .val{color:var(--cyan);text-shadow:0 0 16px rgba(34,211,238,.35)}
+.kpi.green{background:linear-gradient(135deg,#0a2018,#0d2f22);--bar:linear-gradient(90deg,#34d399,#10b981)}.kpi.green .val{color:var(--green);text-shadow:0 0 16px rgba(52,211,153,.35)}
+.kpi.orange{background:linear-gradient(135deg,#251508,#321d0a);--bar:linear-gradient(90deg,#fb923c,#f59e0b)}.kpi.orange .val{color:var(--orange);text-shadow:0 0 16px rgba(251,146,60,.35)}
+.kpi.purple{background:linear-gradient(135deg,#170d2e,#1f1040);--bar:linear-gradient(90deg,#a78bfa,#818cf8)}.kpi.purple .val{color:var(--purple);text-shadow:0 0 16px rgba(167,139,250,.35)}
+.kpi.red{background:linear-gradient(135deg,#2a0f0f,#3a1414);--bar:linear-gradient(90deg,#f87171,#ef4444)}.kpi.red .val{color:var(--red)}
+.kpi.muted{background:rgba(255,255,255,.03);--bar:linear-gradient(90deg,#475569,#64748b)}.kpi.muted .val{color:var(--muted)}
+.sub.up{background:rgba(52,211,153,.14);color:var(--green)}.sub.dn{background:rgba(248,113,113,.14);color:var(--red)}.sub.na{background:rgba(71,85,105,.2);color:var(--dim)}.sub.warn{background:rgba(251,191,36,.14);color:var(--yellow)}.sub.neu{background:rgba(148,163,184,.1);color:var(--dim)}
+.estimate-tag{font-size:10px;color:var(--dim);background:rgba(255,255,255,.05);border:1px solid var(--border);padding:1px 6px;border-radius:4px;margin-left:4px;vertical-align:middle}
+
+/* SECTION */
+.section{background:var(--bg2);border-radius:13px;padding:20px;margin-bottom:14px;border:1px solid var(--border)}
+.section-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px}
+.section h2{font-size:15px;font-weight:700;color:var(--text);display:flex;align-items:center;gap:7px}
+.section h2::before{content:'';width:3px;height:16px;background:linear-gradient(180deg,#818cf8,#22d3ee);border-radius:2px}
+.section .desc{font-size:12px;color:var(--dim);margin-bottom:12px;line-height:1.6}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
+@media(max-width:860px){.row2{grid-template-columns:1fr}.kpi-grid,.kpi-grid-3{grid-template-columns:1fr 1fr}}
+@media(max-width:520px){.kpi-grid,.kpi-grid-3{grid-template-columns:1fr}}
+.chart-box{position:relative;height:300px;width:100%}.chart-tall{height:360px}.chart-sm{height:220px}
+.toggle-grp{display:flex;background:rgba(255,255,255,.04);padding:3px;border-radius:7px;border:1px solid var(--border)}
+.tog{padding:5px 11px;border:none;background:transparent;color:var(--dim);font-size:11px;font-weight:600;cursor:pointer;border-radius:5px;transition:all .2s;font-family:inherit}
+.tog.active{background:rgba(129,140,248,.2);color:#818cf8}
+
+/* TABLES */
+.tbl-wrap{overflow-x:auto}
+.tbl{width:100%;border-collapse:collapse;font-size:13px}
+.tbl th{text-align:left;padding:10px 10px;background:rgba(255,255,255,.04);color:var(--dim);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.3px;border-bottom:1px solid rgba(255,255,255,.07);cursor:pointer;user-select:none;white-space:nowrap}
+.tbl th.r,.tbl td.r{text-align:right}
+.tbl td{padding:10px 10px;border-bottom:1px solid rgba(255,255,255,.04);color:#cbd5e1}
+.tbl tr:hover td{background:rgba(255,255,255,.025)}
+.tbl .rank{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;background:rgba(129,140,248,.14);border-radius:50%;font-size:10px;font-weight:700;color:#818cf8}
+.bar-cell{background:linear-gradient(90deg,rgba(34,211,238,.15) var(--w,0%),transparent var(--w,0%));background-size:100% 3px;background-position:bottom;background-repeat:no-repeat;padding-bottom:10px}
+.empty-r td{text-align:center;padding:28px;color:var(--dimmer);font-style:italic}
+th.sa::after{content:' ▲';color:#818cf8}th.sd::after{content:' ▼';color:#818cf8}
+
+/* SERVICE BADGES */
+.cat-badge{font-size:10px;font-weight:700;padding:2px 7px;border-radius:5px;white-space:nowrap}
+.cat-consultation{background:rgba(34,211,238,.12);color:var(--cyan)}
+.cat-imaging{background:rgba(167,139,250,.12);color:var(--purple)}
+.cat-anc{background:rgba(52,211,153,.12);color:var(--green)}
+.cat-preventive{background:rgba(251,146,60,.12);color:var(--orange)}
+.cat-procedure{background:rgba(251,191,36,.12);color:var(--yellow)}
+.cat-weight{background:rgba(244,114,182,.12);color:var(--rose)}
+.cat-admin{background:rgba(148,163,184,.1);color:var(--muted)}
+.role-badge{font-size:10px;padding:2px 7px;border-radius:5px;font-weight:600;white-space:nowrap}
+.role-entry{background:rgba(52,211,153,.1);color:var(--green);border:1px solid rgba(52,211,153,.2)}
+.role-retention{background:rgba(34,211,238,.1);color:var(--cyan);border:1px solid rgba(34,211,238,.2)}
+.role-high_ticket{background:rgba(251,191,36,.1);color:var(--yellow);border:1px solid rgba(251,191,36,.2)}
+.role-core{background:rgba(148,163,184,.08);color:var(--muted);border:1px solid rgba(148,163,184,.15)}
+
+/* SOCIAL */
+.social-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+@media(max-width:720px){.social-grid{grid-template-columns:1fr}}
+.social-card{padding:16px;border-radius:12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07)}
+.social-card.fb{border-top:3px solid #3b82f6}.social-card.tt{border-top:3px solid var(--purple)}.social-card.ln{border-top:3px solid var(--green)}
+.social-card .plat{font-size:14px;font-weight:700;margin-bottom:10px}
+.social-stat{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.05);font-size:12px}
+.social-stat:last-child{border:none}
+.social-stat .sl{color:var(--dim)}.social-stat .sv{font-weight:700}
+
+/* ATTRIBUTION WARNING */
+.attr-warn{background:rgba(251,191,36,.07);border:1px solid rgba(251,191,36,.25);border-radius:12px;padding:14px 18px;margin-bottom:14px}
+.attr-warn .title{font-size:13px;font-weight:700;color:var(--yellow);margin-bottom:6px;display:flex;align-items:center;gap:6px}
+.attr-warn p{font-size:12px;color:#94a3b8;line-height:1.7}
+
+/* PROFIT EMPTY STATE */
+.empty-state{background:rgba(255,255,255,.03);border:1px dashed rgba(255,255,255,.1);border-radius:12px;padding:28px;text-align:center}
+.empty-state .icon{font-size:32px;margin-bottom:10px}
+.empty-state h3{font-size:15px;font-weight:700;color:var(--muted);margin-bottom:6px}
+.empty-state p{font-size:12px;color:var(--dim);line-height:1.7}
+.data-need-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px;margin-top:14px}
+.data-need{background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:10px;padding:14px}
+.data-need h4{font-size:12px;font-weight:700;color:var(--muted);margin-bottom:6px}
+.data-need ul{list-style:none;font-size:11px;color:var(--dim);line-height:2}
+.data-need ul li::before{content:'→ ';color:var(--dim)}
+
+/* INSIGHT CARD */
+.insight{background:rgba(255,255,255,.03);border-left:4px solid #818cf8;padding:14px 18px;border-radius:10px;margin-bottom:10px;border:1px solid var(--border);border-left-width:4px}
+.insight h3{font-size:13px;color:var(--text);margin-bottom:5px;font-weight:700}
+.insight p{font-size:12px;color:var(--muted);line-height:1.7}
+.insight .hl{background:rgba(251,146,60,.15);padding:1px 5px;border-radius:4px;font-weight:600;color:var(--orange)}
+.insight.g{border-left-color:var(--green)}.insight.g .hl{background:rgba(52,211,153,.15);color:var(--green)}
+.insight.p{border-left-color:var(--purple)}.insight.p .hl{background:rgba(167,139,250,.15);color:var(--purple)}
+.insight.r{border-left-color:var(--red)}.insight.r .hl{background:rgba(248,113,113,.15);color:var(--red)}
+
+/* MISC */
+.partial-badge{font-size:10px;background:rgba(251,191,36,.14);color:var(--yellow);border:1px solid rgba(251,191,36,.3);padding:2px 8px;border-radius:10px;font-weight:700}
+.na-val{color:var(--dim);font-style:italic}
+.search-row{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap}
+.search-in{flex:1;min-width:180px;padding:9px 13px;border:1px solid var(--border);border-radius:9px;font-size:13px;color:var(--text);font-family:inherit;background:rgba(255,255,255,.04)}
+.search-in::placeholder{color:var(--dimmer)}
+.search-in:focus{outline:none;border-color:#818cf8;background:rgba(129,140,248,.07)}
+.footer{text-align:center;font-size:11px;color:var(--dimmer);padding:10px}
 </style></head>
-<body><div class="dashboard">
-<div class="header"><h1>🏥 แดชบอร์ดภิรมย์คลินิก</h1><div class="subtitle">วิเคราะห์ผลการดำเนินงานแบบโต้ตอบ — ลองคลิกที่กราฟ ใช้ตัวกรอง และค้นหาบริการ</div>
-<div class="status-bar"><span class="status-dot"></span><span id="status-text">ข้อมูล ณ พ.ค. 2569 • ที่มา: Google Drive (สถิติภิรมย์คลินิก)</span><span id="bill-status"></span></div></div>
-<div class="filter-bar"><span class="filter-label">⏱ ช่วงเวลา</span><div class="chip-group" id="rangeChips">
+<body><div class="dash">
+
+<!-- HEADER -->
+<div class="header">
+<div><h1>🏥 ภิรมย์คลินิก — Executive Dashboard</h1>
+<div class="sub">คลินิกสูตินรีเวช • ข้อมูล เม.ย. 2568 – พ.ค. 2569</div>
+<div class="status-bar"><span class="dot"></span><span id="hdr-status">โหลดข้อมูล...</span></div></div>
+</div>
+
+<!-- DATA WARNING PANEL -->
+<div class="warn-panel" id="warnPanel"></div>
+
+<!-- FILTER BAR -->
+<div class="filter-bar">
+<span class="filter-label">⏱ ช่วงเวลา</span>
+<div class="chip-group" id="rangeChips">
 <button class="chip active" data-range="all">ทั้งหมด (13 เดือน)</button>
 <button class="chip" data-range="6mo">6 เดือนล่าสุด</button>
 <button class="chip" data-range="3mo">3 เดือนล่าสุด</button>
 <button class="chip" data-range="2569">ปี 2569</button>
-<button class="chip" data-range="2568">ปี 2568</button></div>
-<span class="filter-label" style="margin-left:8px">📅 เลือกเดือน</span>
-<select class="sort-select" id="monthSelect" style="min-width:140px"><option value="">— ไม่เลือก —</option></select></div>
-<div class="tabs" id="tabBar">
-<button class="tab active" data-tab="overview">📊 ภาพรวม</button>
-<button class="tab" data-tab="revenue">💰 รายได้</button>
-<button class="tab" data-tab="patients">👥 คนไข้</button>
-<button class="tab" data-tab="services">🏥 บริการ</button>
-<button class="tab" data-tab="monthlysvc">🔄 บริการรายเดือน</button>
-<button class="tab" data-tab="daily">📅 รายวัน</button>
-<button class="tab" data-tab="social">📱 โซเชียล</button>
-<button class="tab" data-tab="insights">🔍 วิเคราะห์</button></div>
-<div class="tab-pane active" id="tab-overview">
-<div class="kpi-grid">
-<div class="kpi-card blue"><div class="label">💰 รายได้รวม</div><div class="value" id="kpi-total-rev">—</div><div class="delta neutral" id="kpi-total-rev-sub">ช่วงที่เลือก</div></div>
-<div class="kpi-card green"><div class="label">👥 คนไข้รวม</div><div class="value" id="kpi-total-patients">—</div><div class="delta up" id="kpi-new-rate">คนไข้ใหม่ —%</div></div>
-<div class="kpi-card orange"><div class="label">💵 เฉลี่ย/วัน</div><div class="value" id="kpi-avg-day">—</div><div class="delta neutral" id="kpi-avg-day-sub">—</div></div>
-<div class="kpi-card purple"><div class="label">⭐ รายได้/คนไข้</div><div class="value" id="kpi-arpu">—</div><div class="delta neutral">บาท/ครั้ง</div></div></div>
-<div class="section"><div class="section-head"><h2>📈 แนวโน้มรายได้รายเดือน</h2>
-<div class="toggle-group"><button class="toggle-btn active" data-trend="monthly">รายเดือน</button><button class="toggle-btn" data-trend="cumulative">สะสม</button></div></div>
-<div class="desc">คลิกที่จุดในกราฟเพื่อดูรายละเอียดของเดือนนั้น</div>
-<div class="chart-container chart-tall"><canvas id="revenueTrendChart"></canvas></div>
-<div class="detail-card" id="monthDetail"><button class="close-btn" onclick="document.getElementById('monthDetail').classList.remove('show')">✕</button><div class="title" id="detailTitle"></div><div class="detail-grid" id="detailGrid"></div></div></div>
-<div class="row-2">
-<div class="section"><div class="section-head"><h2>👥 คนไข้ใหม่ vs เก่า</h2>
-<div class="toggle-group"><button class="toggle-btn active" data-patient="stacked">รวม</button><button class="toggle-btn" data-patient="split">แยก</button></div></div>
-<div class="chart-container"><canvas id="patientChart"></canvas></div></div>
-<div class="section"><h2>💵 รายได้เฉลี่ยต่อวัน</h2><div class="chart-container"><canvas id="avgDayChart"></canvas></div></div></div></div>
-<div class="tab-pane" id="tab-revenue">
-<div class="row-2">
-<div class="section"><h2>🆚 เทียบ ปี 2568 vs 2569</h2><div class="chart-container chart-tall"><canvas id="yoyChart"></canvas></div></div>
-<div class="section"><h2>📈 อัตราการเติบโต %</h2><div class="chart-container chart-tall"><canvas id="growthChart"></canvas></div></div></div>
-<div class="section"><h2>📋 รายละเอียดรายได้รายเดือน</h2><div class="desc">คลิกหัวคอลัมน์เพื่อเรียงลำดับ</div>
-<div style="overflow-x:auto"><table class="service-table" id="revenueTable"><thead><tr>
-<th data-sort="label">เดือน</th><th class="right" data-sort="revenue">รายได้ (฿)</th><th class="right" data-sort="perDay">เฉลี่ย/วัน</th>
-<th class="right" data-sort="openDays">วันทำการ</th><th class="right" data-sort="total">คนไข้</th><th class="right" data-sort="newP">คนไข้ใหม่</th>
-</tr></thead><tbody id="revenueTableBody"></tbody></table></div></div></div>
-<div class="tab-pane" id="tab-patients">
-<div class="kpi-grid">
-<div class="kpi-card blue"><div class="label">👥 คนไข้รวม</div><div class="value" id="p-total">—</div></div>
-<div class="kpi-card green"><div class="label">🆕 คนไข้ใหม่</div><div class="value" id="p-new">—</div></div>
-<div class="kpi-card orange"><div class="label">🔁 คนไข้เก่า</div><div class="value" id="p-old">—</div></div>
-<div class="kpi-card purple"><div class="label">📊 อัตราคนไข้ใหม่</div><div class="value" id="p-rate">—</div></div></div>
-<div class="row-2">
-<div class="section"><h2>📊 จำนวนคนไข้รวมต่อเดือน</h2><div class="chart-container"><canvas id="patientTotalChart"></canvas></div></div>
-<div class="section"><h2>🔀 สัดส่วนคนไข้ใหม่/เก่า</h2><div class="chart-container"><canvas id="patientRatioChart"></canvas></div></div></div>
-<div class="section"><h2>📈 แนวโน้มคนไข้ใหม่</h2><div class="chart-container chart-tall"><canvas id="newPatientTrendChart"></canvas></div></div></div>
-<div class="tab-pane" id="tab-services">
-<div class="section"><div class="section-head"><h2>🏆 Top 10 บริการ</h2>
-<div class="toggle-group"><button class="toggle-btn active" data-svc="revenue">ตามรายได้</button><button class="toggle-btn" data-svc="volume">ตามจำนวน</button></div></div>
-<div class="chart-container chart-tall"><canvas id="topServiceChart"></canvas></div></div>
-<div class="section"><div class="section-head"><h2>🔍 ค้นหาบริการทั้งหมด</h2><span style="font-size:12px;color:#64748b" id="svc-count">— รายการ</span></div>
-<div class="search-box"><input type="text" class="search-input" id="svcSearch" placeholder="🔎 พิมพ์ชื่อบริการเพื่อค้นหา..."/>
-<select class="sort-select" id="svcSort"><option value="sum-desc">เรียงรายได้ (มาก→น้อย)</option><option value="sum-asc">เรียงรายได้ (น้อย→มาก)</option><option value="qty-desc">เรียงจำนวน (มาก→น้อย)</option><option value="qty-asc">เรียงจำนวน (น้อย→มาก)</option><option value="price-desc">เรียงราคา (มาก→น้อย)</option><option value="price-asc">เรียงราคา (น้อย→มาก)</option></select></div>
-<div style="overflow-x:auto;max-height:600px;overflow-y:auto"><table class="service-table" id="allSvcTable"><thead><tr><th style="width:50px">#</th><th>ชื่อบริการ</th><th class="right">ราคา (฿)</th><th class="right">จำนวนครั้ง</th><th class="right">รายได้รวม</th></tr></thead><tbody id="allSvcBody"></tbody></table></div></div>
-<div class="section">
-<div class="section-head"><h2>📅 วิเคราะห์บริการรายเดือน & การเติบโต</h2>
-<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-<button class="svc-view-tab active" id="svcTabAll" onclick="setSvcView('all',this)">ทุกบริการ (40)</button>
-<button class="svc-view-tab" id="svcTabTracked" onclick="setSvcView('tracked',this)">มีข้อมูลรายเดือน</button>
-<button class="compare-fab" id="compareFab">⚖️ เปรียบเทียบ <span id="compareCount">0</span></button>
-</div></div>
-<div class="desc">คลิกแถบ Mini-Chart ใต้การ์ดเพื่อดูกราฟรายเดือน • ✓ ติ๊กช่องเพื่อเลือกเปรียบเทียบสูงสุด 4 บริการพร้อมกัน</div>
-<div class="svc-month-filter" id="svcMonthFilter"></div>
-<div class="svc-compare-wrap" id="svcCompareWrap">
-<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
-<span style="font-size:15px;font-weight:700;color:#818cf8">⚖️ เปรียบเทียบบริการที่เลือก</span>
-<button onclick="clearCompare()" class="svc-view-tab">✕ ล้างทั้งหมด</button>
+<button class="chip" data-range="2568">ปี 2568</button>
 </div>
-<div class="chart-container chart-tall"><canvas id="svcCompareChart"></canvas></div>
-<div id="compareGrowthRow" style="display:flex;gap:10px;flex-wrap:wrap;margin-top:14px"></div>
+<span class="filter-label">📅 เดือน</span>
+<select class="sort-sel" id="monthSel" style="min-width:130px"><option value="">— ทั้งหมด —</option></select>
 </div>
-<div class="svc-analysis-grid" id="svcAnalysisGrid"></div>
-</div></div>
-<div class="tab-pane" id="tab-monthlysvc">
-<div class="section"><div class="section-head"><h2>🔄 บริการเด่นเปรียบเทียบรายเดือน</h2></div><div class="desc">เปรียบเทียบ Top 3 บริการที่นิยมในแต่ละเดือน</div><div class="month-grid" id="monthlySvcGrid"></div></div>
-<div class="section"><h2>📊 แนวโน้มบริการ Top 3 ตลอดปี</h2><div class="chart-container chart-tall"><canvas id="trendTopSvcChart"></canvas></div></div>
-<div class="section"><h2>🥇 บริการที่ทำรายได้สูงสุดในแต่ละเดือน</h2><div class="chart-container chart-tall"><canvas id="monthlyTopRevChart"></canvas></div></div></div>
-<div class="tab-pane" id="tab-daily">
-<div class="kpi-grid">
-<div class="kpi-card blue"><div class="label">📅 คนไข้/วัน (เฉลี่ย)</div><div class="value" id="kpi-avg-patient-day">—</div><div class="delta neutral">ช่วงที่เลือก</div></div>
-<div class="kpi-card green"><div class="label">🏆 วันที่คนไข้มากสุด</div><div class="value" id="kpi-max-day">—</div><div class="delta up" id="kpi-max-day-val">—</div></div>
-<div class="kpi-card orange"><div class="label">📉 วันที่คนไข้น้อยสุด</div><div class="value" id="kpi-min-day">—</div><div class="delta neutral" id="kpi-min-day-val">—</div></div>
-<div class="kpi-card purple"><div class="label">🗓 วันทำการรวม</div><div class="value" id="kpi-total-days">—</div><div class="delta neutral">วัน</div></div></div>
-<div class="section"><div class="section-head"><h2>📅 จำนวนคนไข้รายวัน — Timeline</h2><span id="live-badge-1" class="live-badge">รอข้อมูล</span></div><div class="desc">คนไข้ที่เข้ามาใช้บริการในแต่ละวัน (ข้อมูลจาก patient2026: ม.ค.–พ.ค. 2569)</div><div class="chart-container chart-tall"><canvas id="dailyTimelineChart"></canvas></div></div>
-<div class="section"><div class="section-head"><h2>📊 คนไข้เฉลี่ยตามวันในสัปดาห์</h2><span id="live-badge-2" class="live-badge">รอข้อมูล</span></div><div class="desc">เลือกเดือนเพื่อดูว่าวันไหนของสัปดาห์มีคนไข้เฉลี่ยมากที่สุด (เขียว) / น้อยที่สุด (ส้ม)</div><div class="month-selector" id="dowMonthSelector"></div><div class="row-2"><div><div class="chart-container"><canvas id="dowChart"></canvas></div></div><div><div class="dow-grid" id="dowGrid"></div></div></div></div>
-<div class="section"><h2>📋 ตารางสรุปวันของสัปดาห์ — รายเดือน</h2><div class="desc">ค่าเฉลี่ยคนไข้ในแต่ละวันของสัปดาห์ เปรียบเทียบทุกเดือน</div><div style="overflow-x:auto"><table class="service-table" id="dowSummaryTable"><thead><tr><th>เดือน</th><th class="right">อา.</th><th class="right">จ.</th><th class="right">อ.</th><th class="right">พ.</th><th class="right">พฤ.</th><th class="right">ศ.</th><th class="right">ส.</th><th class="right">มากสุด</th><th class="right">น้อยสุด</th></tr></thead><tbody id="dowSummaryBody"></tbody></table></div></div></div>
-<div class="tab-pane" id="tab-social">
-<div class="section"><h2>📱 ภาพรวมโซเชียลมีเดีย (สัปดาห์ล่าสุด)</h2>
-<div class="social-grid">
-<div class="social-card fb"><div class="platform">📘 Facebook</div>
-<div class="social-stat"><span class="lbl">ยอดดู</span><span class="val">167,313</span></div>
-<div class="social-stat"><span class="lbl">ผู้ชม</span><span class="val">106,832</span></div>
-<div class="social-stat"><span class="lbl">การโต้ตอบ</span><span class="val">89</span></div>
-<div class="social-stat"><span class="lbl">คลิกลิงก์</span><span class="val">295</span></div>
-<div class="social-stat"><span class="lbl">ผู้ติดต่อ</span><span class="val">70</span></div></div>
-<div class="social-card tt"><div class="platform">🎵 TikTok</div>
-<div class="social-stat"><span class="lbl">ยอดชม</span><span class="val">53,836</span></div>
-<div class="social-stat"><span class="lbl">คอนเวอร์ชัน</span><span class="val">1</span></div>
-<div class="social-stat"><span class="lbl">ผู้ติดตาม</span><span class="val">74</span></div></div>
-<div class="social-card ln"><div class="platform">💬 LINE OA</div>
-<div class="social-stat"><span class="lbl">เพิ่มเพื่อนใหม่</span><span class="val">38</span></div>
-<div class="social-stat"><span class="lbl">จากลิงก์</span><span class="val">29</span></div>
-<div class="social-stat"><span class="lbl">จากโปสเตอร์</span><span class="val">7</span></div></div></div></div>
-<div class="row-2">
-<div class="section"><h2>📊 Facebook — ยอดดูรายสัปดาห์</h2><div class="chart-container chart-tall"><canvas id="fbViewsChart"></canvas></div></div>
-<div class="section"><h2>📊 TikTok — ยอดชมวิดีโอ</h2><div class="chart-container chart-tall"><canvas id="ttViewsChart"></canvas></div></div></div>
-<div class="section"><h2>💬 LINE OA — เพิ่มเพื่อนใหม่</h2><div class="chart-container"><canvas id="lineChart"></canvas></div></div></div>
-<div class="tab-pane" id="tab-insights"><div class="section"><h2>🔍 บทวิเคราะห์ภาพรวม</h2>
-<div class="insights green"><h3>📈 การเติบโตอย่างต่อเนื่อง</h3><p>คลินิกเติบโตจาก <span class="highlight">29,089 บาท</span> ใน เม.ย. 68 สู่จุดสูงสุด <span class="highlight">689,732 บาท</span> ใน มี.ค. 69 — <span class="highlight">23 เท่า</span> ภายใน 1 ปี</p></div>
-<div class="insights"><h3>💼 รายได้ต่อวันพุ่งสูง</h3><p>เพิ่มจาก 2,237 บาท เป็น <span class="highlight">27,860 บาท</span> — <span class="highlight">+1,145%</span></p></div>
-<div class="insights orange"><h3>🎯 บริการเรือธง</h3><p><span class="highlight">DF-ค่าตรวจรักษา</span> (317,600) + <span class="highlight">ultrasound2D-transvagina</span> (221,500)</p></div>
-<div class="insights purple"><h3>👥 คนไข้ใหม่เพิ่มขึ้น</h3><p>มี.ค. 2569 คนไข้ใหม่ <span class="highlight">209 คน</span> จาก 382 (54.7%) สูงสุดในประวัติ</p></div></div></div>
-<div class="footer">📊 ภิรมย์คลินิก • ข้อมูลจาก Google Drive — สถิติภิรมย์คลินิก</div></div>
-<script>
-const monthlyData=[
-{ym:'2568-04',label:'เม.ย. 68',year:'2568',revenue:29089,perDay:2237,openDays:13,total:34,oldP:28,newP:6},
-{ym:'2568-05',label:'พ.ค. 68',year:'2568',revenue:148998,perDay:5518,openDays:27,total:94,oldP:73,newP:21},
-{ym:'2568-06',label:'มิ.ย. 68',year:'2568',revenue:179562,perDay:7481,openDays:24,total:124,oldP:95,newP:29},
-{ym:'2568-07',label:'ก.ค. 68',year:'2568',revenue:341599,perDay:12199,openDays:28,total:168,oldP:116,newP:52},
-{ym:'2568-08',label:'ส.ค. 68',year:'2568',revenue:391872,perDay:14513,openDays:27,total:257,oldP:165,newP:92},
-{ym:'2568-09',label:'ก.ย. 68',year:'2568',revenue:430494,perDay:16557,openDays:26,total:265,oldP:148,newP:117},
-{ym:'2568-10',label:'ต.ค. 68',year:'2568',revenue:380989,perDay:15239,openDays:25,total:258,oldP:149,newP:109},
-{ym:'2568-11',label:'พ.ย. 68',year:'2568',revenue:462781,perDay:20120,openDays:23,total:270,oldP:120,newP:150},
-{ym:'2568-12',label:'ธ.ค. 68',year:'2568',revenue:546053,perDay:21002,openDays:26,total:301,oldP:158,newP:143},
-{ym:'2569-01',label:'ม.ค. 69',year:'2569',revenue:587675,perDay:24236,openDays:24,total:310,oldP:157,newP:153},
-{ym:'2569-02',label:'ก.พ. 69',year:'2569',revenue:577191,perDay:24049,openDays:24,total:310,oldP:138,newP:172},
-{ym:'2569-03',label:'มี.ค. 69',year:'2569',revenue:689732,perDay:27589,openDays:25,total:382,oldP:173,newP:209},
-{ym:'2569-04',label:'เม.ย. 69',year:'2569',revenue:557210,perDay:27860,openDays:20,total:305,oldP:170,newP:135}];
-const monthlyTopSvc={
-'2568-05':[{name:'ตรวจภายใน',qty:19},{name:'ใบรับรองแพทย์',qty:2}],
-'2568-06':[{name:'ค่าตรวจรักษา',qty:58},{name:'ตรวจภายใน',qty:16},{name:'DF-หัตถการ 1000',qty:3}],
-'2568-07':[{name:'ตรวจภายใน',qty:22},{name:'STD 12 profile',qty:8},{name:'TCA',qty:3}],
-'2568-08':[{name:'ultrasound2D-transvagina',qty:49},{name:'ตรวจภายใน',qty:46},{name:'ultrasound2D-ANC follow up',qty:9}],
-'2568-09':[{name:'ultrasound2D-transvagina',qty:65},{name:'ตรวจภายใน',qty:36},{name:'ultrasound2D-ANC follow up',qty:21}],
-'2568-10':[{name:'ultrasound2D-transvagina',qty:48},{name:'ตรวจภายใน',qty:48},{name:'ultrasound2D-ANC follow up',qty:29}],
-'2568-11':[{name:'ultrasound2D-transvagina',qty:48},{name:'ตรวจภายใน',qty:35},{name:'ultrasound2D-ANC follow up',qty:30}],
-'2568-12':[{name:'ultrasound2D-transvagina',qty:55},{name:'ตรวจภายใน',qty:42},{name:'ultrasound2D-ANC follow up',qty:27}],
-'2569-01':[{name:'ultrasound2D-transvagina',qty:66},{name:'ตรวจภายใน',qty:37},{name:'ultrasound2D-ANC follow up',qty:35}],
-'2569-02':[{name:'ultrasound2D-transvagina',qty:59},{name:'ตรวจภายใน',qty:39},{name:'ultrasound2D-ANC follow up',qty:34}],
-'2569-03':[{name:'ultrasound2D-transvagina',qty:64},{name:'ultrasound2D-ANC follow up',qty:56},{name:'ตรวจภายใน',qty:41}]};
-const allServices=[
-{name:'DF-ค่าตรวจรักษา',price:350,qty:993,sum:317600},{name:'ultrasound2D-transvagina',price:850,qty:265,sum:221500},
-{name:'OBG-PV+Thinprep+HPV21+TVS',price:3000,qty:44,sum:132000},{name:'OBG-PV+thinprep+HPV21',price:2200,qty:44,sum:96800},
-{name:'obg-ฝากครรภ์ครั้งแรก GA<12wk',price:2350,qty:40,sum:94000},{name:'ultrasound2D-ANC follow up',price:600,qty:116,sum:69600},
-{name:'obg-ฝากครรภ์ครั้งต่อไป',price:1200,qty:57,sum:68400},{name:'NIPT advanced 23คู่',price:10900,qty:6,sum:65400},
-{name:'OBG- STIs 15 profile',price:2890,qty:22,sum:63580},{name:'ค่าตรวจภายใน',price:200,qty:245,sum:49000},
-{name:'ultrasound2D-ANC ครั้งแรก',price:800,qty:51,sum:40800},{name:'NIPT basic 13,18,21',price:7900,qty:5,sum:39500},
-{name:'complete NIPT 96 โรค',price:16900,qty:2,sum:33800},{name:'ultrasound2D-anomaly',price:1000,qty:31,sum:31000},
-{name:'DF off implanon',price:1400,qty:22,sum:30800},{name:'ultrasound MFM',price:2350,qty:13,sum:30550},
-{name:'OBG-PV+Thinprep',price:1400,qty:21,sum:29400},{name:'OBG-PV+thinprep+TVS',price:2200,qty:13,sum:28600},
-{name:'STD 12 profile',price:1590,qty:15,sum:23850},{name:'ปากกา Mounjaro 2.5 mg',price:11900,qty:2,sum:23800},
-{name:'obg-ฝากครรภ์ครั้งแรก GA>12wk',price:2350,qty:10,sum:23500},{name:'OBG-amenorrhea (TSH,PRL+TVS)',price:2250,qty:10,sum:22500},
-{name:'ultrasound3D/4D',price:2000,qty:11,sum:22000},{name:'endometrial sampling',price:2500,qty:8,sum:20000},
-{name:'ปากกา Mounjaro 7.5 mg',price:19900,qty:1,sum:19900},{name:'ปากกา Mounjaro 5mg',price:16900,qty:1,sum:16900},
-{name:'DF Implanon',price:3850,qty:4,sum:15400},{name:'Implanon (ฝัง+off)',price:4850,qty:3,sum:14550},
-{name:'OBG-amenorrhea full',price:3333,qty:4,sum:13332},{name:'copper IUD',price:2800,qty:4,sum:11200},
-{name:'Quad test',price:2490,qty:4,sum:9960},{name:'NST-fetal monitoring',price:500,qty:18,sum:9000},
-{name:'DF-หัตถการ 1000 บาท',price:1000,qty:8,sum:8000},{name:'Beta-hcg',price:600,qty:13,sum:7800},
-{name:'TCA จี้หูด',price:300,qty:25,sum:7500},{name:'DF-ค่าบริการฉีดยา',price:150,qty:45,sum:6750},
-{name:'DF-หัตถการ 500',price:500,qty:8,sum:4000},{name:'STD HIV/SY/HbsAg/HBV',price:990,qty:4,sum:3960},
-{name:'ใบรับรองแพทย์ 5 โรค',price:200,qty:9,sum:1800},{name:'VDRL',price:250,qty:4,sum:1000}];
-const fbWeekly=[{wk:'27ต.ค.-2พ.ย.',views:59382,viewers:12003},{wk:'3-9 พ.ย.',views:84279,viewers:50133},{wk:'10-16 พ.ย.',views:130295,viewers:99490},{wk:'17-23 พ.ย.',views:138807,viewers:95226},{wk:'24-30 พ.ย.',views:135956,viewers:92585},{wk:'1-7 ธ.ค.',views:155865,viewers:102027},{wk:'8-14 ธ.ค.',views:156251,viewers:101353},{wk:'15-21 ธ.ค.',views:73148,viewers:40780},{wk:'22-28 ธ.ค.',views:72543,viewers:34545},{wk:'29ธ.ค.-4ม.ค.',views:76751,viewers:39600},{wk:'5-11 ม.ค.',views:62531,viewers:27177},{wk:'12-18 ม.ค.',views:161586,viewers:128993},{wk:'19-25 ม.ค.',views:291030,viewers:190998},{wk:'26ม.ค.-1ก.พ.',views:44533,viewers:22495},{wk:'2-8 ก.พ.',views:22826,viewers:11234},{wk:'9-15 ก.พ.',views:40935,viewers:21063},{wk:'16-22 ก.พ.',views:30873,viewers:15733},{wk:'23ก.พ.-1มี.ค.',views:74777,viewers:46560},{wk:'2-8 มี.ค.',views:166380,viewers:105177},{wk:'9-15 มี.ค.',views:185555,viewers:118286},{wk:'16-22 มี.ค.',views:167313,viewers:106832}];
-const ttWeekly=[{wk:'27ต.ค.-2พ.ย.',views:61242},{wk:'3-9 พ.ย.',views:102701},{wk:'10-16 พ.ย.',views:77893},{wk:'17-23 พ.ย.',views:81865},{wk:'24-30 พ.ย.',views:73431},{wk:'1-7 ธ.ค.',views:126479},{wk:'8-14 ธ.ค.',views:117879},{wk:'15-21 ธ.ค.',views:130223},{wk:'22-28 ธ.ค.',views:101263},{wk:'29ธ.ค.-4ม.ค.',views:81591},{wk:'5-11 ม.ค.',views:104678},{wk:'12-18 ม.ค.',views:91537},{wk:'19-25 ม.ค.',views:78225},{wk:'26ม.ค.-1ก.พ.',views:122608},{wk:'2-8 ก.พ.',views:67831},{wk:'9-15 ก.พ.',views:53836}];
-const lineWeekly=[{wk:'27ต.ค.-2พ.ย.',link:27,poster:5},{wk:'3-9 พ.ย.',link:30,poster:6},{wk:'10-16 พ.ย.',link:33,poster:17},{wk:'17-23 พ.ย.',link:26,poster:11},{wk:'24-30 พ.ย.',link:30,poster:13},{wk:'1-7 ธ.ค.',link:24,poster:9},{wk:'8-14 ธ.ค.',link:32,poster:8},{wk:'15-21 ธ.ค.',link:56,poster:8},{wk:'22-28 ธ.ค.',link:34,poster:9},{wk:'29ธ.ค.-4ม.ค.',link:30,poster:7},{wk:'5-11 ม.ค.',link:43,poster:14},{wk:'12-18 ม.ค.',link:26,poster:10},{wk:'19-25 ม.ค.',link:29,poster:8},{wk:'26ม.ค.-1ก.พ.',link:33,poster:13}];
-const dailyByMonth={
-'2026-01':[[4,6,8],[5,4,3],[6,8,9],[7,5,7],[8,12,3],[10,8,4],[11,7,10],[12,5,5],[13,6,8],[14,7,2],[15,4,8],[17,2,9],[18,8,7],[19,10,6],[20,7,9],[21,8,6],[22,6,5],[24,6,7],[25,2,8],[26,7,9],[27,3,10],[28,4,1],[29,7,4],[31,15,5]],
-'2026-02':[[1,8,10],[2,7,10],[3,7,6],[4,6,7],[5,7,7],[7,8,9],[8,1,9],[9,4,10],[10,9,8],[11,4,5],[12,1,7],[14,9,8],[15,5,9],[16,6,7],[17,3,7],[18,8,3],[19,7,4],[21,2,9],[22,4,7],[23,7,6],[24,12,4],[25,3,6],[26,6,8],[28,4,6]],
-'2026-03':[[1,9,11],[2,6,13],[3,11,6],[4,5,7],[5,5,12],[7,7,8],[8,10,6],[9,8,7],[10,9,8],[11,9,4],[12,10,6],[14,6,8],[15,6,9],[16,6,11],[17,6,10],[19,5,4],[21,8,9],[22,8,9],[23,5,13],[24,3,9],[26,4,3],[28,5,6],[29,10,11],[30,12,11],[31,5,8]],
-'2026-04':[[1,7,5],[2,4,0],[5,1,16],[6,5,13],[7,10,9],[9,8,5],[11,5,10],[12,3,15],[18,13,5],[19,7,12],[20,7,13],[21,9,9],[22,6,6],[23,8,3],[25,7,2],[26,5,19],[27,6,10],[28,8,6],[29,11,2],[30,5,10]],
-'2026-05':[[1,6,2],[2,6,5],[3,8,9],[4,6,10],[5,5,5],[6,11,6],[7,5,2],[8,7,7],[9,7,3],[10,3,18],[11,0,3]]};
-const state={range:'all',trend:'monthly',patientView:'stacked',serviceView:'revenue',svcSearch:'',svcSort:'sum-desc',revSort:{key:'label',dir:'asc'},dowMonth:null};
-const COLORS={primary:'#22d3ee',primaryLight:'rgba(34,211,238,0.35)',green:'#34d399',greenLight:'rgba(52,211,153,0.3)',orange:'#fb923c',purple:'#a78bfa',purpleLight:'rgba(167,139,250,0.35)',gray:'#475569',rose:'#f472b6'};
-const DOW_NAMES=['อา','จ','อ','พ','พฤ','ศ','ส'];const DOW_FULL=['อาทิตย์','จันทร์','อังคาร','พุธ','พฤหัสฯ','ศุกร์','เสาร์'];
-const fmt=n=>new Intl.NumberFormat('en-US').format(Math.round(n));
-const fmtBaht=n=>'฿'+fmt(n);
-Chart.defaults.font.family="'Sarabun','Tahoma','Segoe UI',sans-serif";Chart.defaults.font.size=12;Chart.defaults.color='#94a3b8';
-Chart.defaults.plugins.legend.labels.usePointStyle=true;Chart.defaults.plugins.legend.labels.padding=14;
-Chart.defaults.plugins.tooltip.backgroundColor='rgba(10,12,28,.97)';Chart.defaults.plugins.tooltip.padding=12;Chart.defaults.plugins.tooltip.cornerRadius=8;Chart.defaults.plugins.tooltip.titleColor='#e2e8f0';Chart.defaults.plugins.tooltip.bodyColor='#94a3b8';
-const charts={};let dailyData=null,dowByMonth=null;
-function getFilteredData(){if(state.range&&state.range.startsWith('month:')){const ym=state.range.slice(6);return monthlyData.filter(d=>d.ym===ym);}if(state.range==='all')return monthlyData;if(state.range==='6mo')return monthlyData.slice(-6);if(state.range==='3mo')return monthlyData.slice(-3);if(state.range==='2569')return monthlyData.filter(d=>d.year==='2569');if(state.range==='2568')return monthlyData.filter(d=>d.year==='2568');return monthlyData;}
-function makeGradient(ctx,color){const c=ctx.chart.ctx;const g=c.createLinearGradient(0,0,0,380);g.addColorStop(0,color+'60');g.addColorStop(1,color+'08');return g;}
-function renderKPIs(){const data=getFilteredData();if(data.length===0)return;const totalRev=data.reduce((s,m)=>s+m.revenue,0);const totalPat=data.reduce((s,m)=>s+m.total,0);const totalNew=data.reduce((s,m)=>s+m.newP,0);const totalDays=data.reduce((s,m)=>s+m.openDays,0);const avgDay=totalRev/totalDays;const arpu=totalRev/totalPat;const newRate=(totalNew/totalPat*100).toFixed(1);document.getElementById('kpi-total-rev').innerHTML=fmt(totalRev)+'<span class="unit"> บาท</span>';document.getElementById('kpi-total-rev-sub').textContent=data[0].label+' – '+data[data.length-1].label;document.getElementById('kpi-total-patients').innerHTML=fmt(totalPat)+'<span class="unit"> ราย</span>';document.getElementById('kpi-new-rate').textContent='คนไข้ใหม่ '+newRate+'%';document.getElementById('kpi-avg-day').innerHTML=fmt(avgDay)+'<span class="unit"> บาท</span>';document.getElementById('kpi-avg-day-sub').textContent='จาก '+totalDays+' วันทำการ';document.getElementById('kpi-arpu').innerHTML=fmt(arpu)+'<span class="unit"> บาท</span>';document.getElementById('p-total').innerHTML=fmt(totalPat)+'<span class="unit"> ราย</span>';document.getElementById('p-new').innerHTML=fmt(totalNew)+'<span class="unit"> ราย</span>';document.getElementById('p-old').innerHTML=fmt(totalPat-totalNew)+'<span class="unit"> ราย</span>';document.getElementById('p-rate').innerHTML=newRate+'<span class="unit">%</span>';}
-function renderRevenueTrend(){const data=getFilteredData();let values,lbl;if(state.trend==='cumulative'){let sum=0;values=data.map(m=>sum+=m.revenue);lbl='รายได้สะสม';}else{values=data.map(m=>m.revenue);lbl='รายได้';}if(charts.revenueTrend)charts.revenueTrend.destroy();charts.revenueTrend=new Chart(document.getElementById('revenueTrendChart'),{type:'line',data:{labels:data.map(m=>m.label),datasets:[{label:lbl,data:values,borderColor:COLORS.primary,backgroundColor:ctx=>makeGradient(ctx,COLORS.primary),tension:.4,fill:true,pointBackgroundColor:'#0b0d1e',pointBorderColor:COLORS.primary,pointBorderWidth:2,pointRadius:6,pointHoverRadius:9,borderWidth:3}]},options:{responsive:true,maintainAspectRatio:false,onClick:(e,els)=>{if(els.length===0)return;showMonthDetail(data[els[0].index]);},plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>'  '+fmtBaht(ctx.parsed.y)}}},scales:{x:{grid:{color:'rgba(255,255,255,.04)'}},y:{beginAtZero:true,ticks:{callback:v=>fmt(v)},grid:{color:'rgba(255,255,255,.06)'}}}}});}
-function showMonthDetail(m){const card=document.getElementById('monthDetail');document.getElementById('detailTitle').textContent='📅 รายละเอียดเดือน '+m.label;document.getElementById('detailGrid').innerHTML=`<div class="item"><div class="lbl">💰 รายได้</div><div class="val">${fmtBaht(m.revenue)}</div></div><div class="item"><div class="lbl">📅 วันทำการ</div><div class="val">${m.openDays} วัน</div></div><div class="item"><div class="lbl">💵 เฉลี่ย/วัน</div><div class="val">${fmtBaht(m.perDay)}</div></div><div class="item"><div class="lbl">👥 คนไข้รวม</div><div class="val">${m.total} ราย</div></div><div class="item"><div class="lbl">🆕 คนไข้ใหม่</div><div class="val">${m.newP} ราย</div></div><div class="item"><div class="lbl">🔁 คนไข้เก่า</div><div class="val">${m.oldP} ราย</div></div><div class="item"><div class="lbl">📊 รายได้/คนไข้</div><div class="val">${fmtBaht(m.revenue/m.total)}</div></div><div class="item"><div class="lbl">% คนไข้ใหม่</div><div class="val">${(m.newP/m.total*100).toFixed(1)}%</div></div>`;card.classList.add('show');}
-function renderPatientChart(){const data=getFilteredData();if(charts.patient)charts.patient.destroy();const stacked=state.patientView==='stacked';charts.patient=new Chart(document.getElementById('patientChart'),{type:'bar',data:{labels:data.map(m=>m.label),datasets:[{label:'คนไข้เก่า',data:data.map(m=>m.oldP),backgroundColor:COLORS.primaryLight,borderRadius:4},{label:'คนไข้ใหม่',data:data.map(m=>m.newP),backgroundColor:COLORS.orange,borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',align:'end'}},scales:{x:{stacked,grid:{color:'rgba(255,255,255,.04)'}},y:{stacked,beginAtZero:true,grid:{color:'rgba(255,255,255,.06)'}}}}});}
-function renderAvgDayChart(){const data=getFilteredData();if(charts.avgDay)charts.avgDay.destroy();charts.avgDay=new Chart(document.getElementById('avgDayChart'),{type:'bar',data:{labels:data.map(m=>m.label),datasets:[{label:'รายได้เฉลี่ย/วัน',data:data.map(m=>m.perDay),backgroundColor:data.map((_,i)=>i===data.length-1?COLORS.green:COLORS.greenLight),borderRadius:6,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>'  '+fmtBaht(ctx.parsed.y)+' / วัน'}}},scales:{x:{grid:{color:'rgba(255,255,255,.04)'}},y:{beginAtZero:true,ticks:{callback:v=>fmt(v)},grid:{color:'rgba(255,255,255,.06)'}}}}});}
-function renderYoYChart(){if(charts.yoy)charts.yoy.destroy();const months=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];const d2568=new Array(12).fill(0),d2569=new Array(12).fill(0);monthlyData.forEach(m=>{const idx=parseInt(m.ym.split('-')[1])-1;if(m.year==='2568')d2568[idx]=m.revenue;else d2569[idx]=m.revenue;});charts.yoy=new Chart(document.getElementById('yoyChart'),{type:'bar',data:{labels:months,datasets:[{label:'ปี 2568',data:d2568,backgroundColor:COLORS.gray,borderRadius:6},{label:'ปี 2569',data:d2569,backgroundColor:COLORS.primary,borderRadius:6}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',align:'end'},tooltip:{callbacks:{label:ctx=>'  '+ctx.dataset.label+': '+fmtBaht(ctx.parsed.y)}}},scales:{x:{grid:{color:'rgba(255,255,255,.04)'}},y:{beginAtZero:true,ticks:{callback:v=>fmt(v)},grid:{color:'rgba(255,255,255,.06)'}}}}});}
-function renderGrowthChart(){if(charts.growth)charts.growth.destroy();const data=getFilteredData();const growth=data.map((m,i)=>i===0?0:((m.revenue-data[i-1].revenue)/data[i-1].revenue*100));charts.growth=new Chart(document.getElementById('growthChart'),{type:'bar',data:{labels:data.map(m=>m.label),datasets:[{label:'การเติบโต %',data:growth,backgroundColor:growth.map(v=>v>=0?COLORS.green:COLORS.rose),borderRadius:6,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>'  '+ctx.parsed.y.toFixed(1)+'%'}}},scales:{x:{grid:{color:'rgba(255,255,255,.04)'}},y:{ticks:{callback:v=>v+'%'},grid:{color:'rgba(255,255,255,.06)'}}}}});}
-function renderRevenueTable(){const data=[...getFilteredData()];const{key,dir}=state.revSort;data.sort((a,b)=>{const av=a[key],bv=b[key];if(typeof av==='string')return dir==='asc'?av.localeCompare(bv):bv.localeCompare(av);return dir==='asc'?av-bv:bv-av;});document.getElementById('revenueTableBody').innerHTML=data.map(m=>`<tr><td><strong style="color:#e2e8f0">${m.label}</strong></td><td class="right">${fmt(m.revenue)}</td><td class="right">${fmt(m.perDay)}</td><td class="right">${m.openDays}</td><td class="right">${m.total}</td><td class="right">${m.newP}</td></tr>`).join('');document.querySelectorAll('#revenueTable th').forEach(th=>{th.classList.remove('sort-asc','sort-desc');if(th.dataset.sort===key)th.classList.add('sort-'+dir);});}
-function renderPatientTotalChart(){if(charts.patientTotal)charts.patientTotal.destroy();const data=getFilteredData();charts.patientTotal=new Chart(document.getElementById('patientTotalChart'),{type:'line',data:{labels:data.map(m=>m.label),datasets:[{label:'คนไข้รวม',data:data.map(m=>m.total),borderColor:COLORS.purple,backgroundColor:'rgba(167,139,250,.15)',tension:.4,fill:true,pointBackgroundColor:'#0b0d1e',pointBorderColor:COLORS.purple,pointBorderWidth:2,pointRadius:5,borderWidth:3}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{color:'rgba(255,255,255,.04)'}},y:{beginAtZero:true,grid:{color:'rgba(255,255,255,.06)'}}}}});}
-function renderPatientRatioChart(){if(charts.patientRatio)charts.patientRatio.destroy();const data=getFilteredData();const totalNew=data.reduce((s,m)=>s+m.newP,0),totalOld=data.reduce((s,m)=>s+m.oldP,0);charts.patientRatio=new Chart(document.getElementById('patientRatioChart'),{type:'doughnut',data:{labels:['คนไข้ใหม่','คนไข้เก่า'],datasets:[{data:[totalNew,totalOld],backgroundColor:[COLORS.orange,COLORS.primaryLight],borderWidth:3,borderColor:'#0b0d1e'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'right'},tooltip:{callbacks:{label:ctx=>'  '+ctx.label+': '+fmt(ctx.parsed)+' ราย'}}},cutout:'65%'}});}
-function renderNewPatientTrendChart(){if(charts.newPatient)charts.newPatient.destroy();const data=getFilteredData();charts.newPatient=new Chart(document.getElementById('newPatientTrendChart'),{type:'line',data:{labels:data.map(m=>m.label),datasets:[{label:'คนไข้ใหม่',data:data.map(m=>m.newP),borderColor:COLORS.orange,backgroundColor:ctx=>makeGradient(ctx,COLORS.orange),tension:.4,fill:true,pointBackgroundColor:'#0b0d1e',pointBorderColor:COLORS.orange,pointBorderWidth:2,pointRadius:5,borderWidth:3}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{color:'rgba(255,255,255,.04)'}},y:{beginAtZero:true,grid:{color:'rgba(255,255,255,.06)'}}}}});}
-function renderTopServiceChart(){if(charts.topService)charts.topService.destroy();const top10=[...allServices].sort((a,b)=>state.serviceView==='revenue'?b.sum-a.sum:b.qty-a.qty).slice(0,10);charts.topService=new Chart(document.getElementById('topServiceChart'),{type:'bar',data:{labels:top10.map(s=>s.name.length>32?s.name.slice(0,30)+'…':s.name),datasets:[{label:state.serviceView==='revenue'?'รายได้':'จำนวน',data:top10.map(s=>state.serviceView==='revenue'?s.sum:s.qty),backgroundColor:top10.map((_,i)=>[COLORS.primary,COLORS.green,COLORS.orange,COLORS.purple,COLORS.rose][i%5]),borderRadius:6,borderSkipped:false}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>'  '+(state.serviceView==='revenue'?fmtBaht(ctx.parsed.x):fmt(ctx.parsed.x)+' ครั้ง')}}},scales:{x:{beginAtZero:true,ticks:{callback:v=>fmt(v)},grid:{color:'rgba(255,255,255,.06)'}},y:{grid:{display:false}}}}});}
-function renderAllServices(){const search=state.svcSearch.toLowerCase().trim();let filtered=allServices.filter(s=>s.name.toLowerCase().includes(search));const[key,dir]=state.svcSort.split('-');filtered.sort((a,b)=>dir==='desc'?b[key]-a[key]:a[key]-b[key]);document.getElementById('svc-count').textContent=filtered.length+' รายการ';const max=filtered.length?Math.max(...filtered.map(s=>s.sum)):1;if(filtered.length===0){document.getElementById('allSvcBody').innerHTML='<tr class="empty-row"><td colspan="5">ไม่พบรายการ</td></tr>';return;}document.getElementById('allSvcBody').innerHTML=filtered.map((s,i)=>{const pct=(s.sum/max)*100;return`<tr><td><span class="rank">${i+1}</span></td><td>${s.name}</td><td class="right">${fmt(s.price)}</td><td class="right">${fmt(s.qty)}</td><td class="right bar-cell" style="--w:${pct}%"><strong>${fmt(s.sum)}</strong></td></tr>`;}).join('');}
-function renderMonthlySvc(){const grid=document.getElementById('monthlySvcGrid');const orderedKeys=Object.keys(monthlyTopSvc).sort();grid.innerHTML=orderedKeys.map(ym=>{const md=monthlyData.find(m=>m.ym===ym);const services=monthlyTopSvc[ym];const max=Math.max(...services.map(s=>s.qty));return `<div class="month-card"><h4>${md?md.label:ym}<span class="sum">${md?md.total+' คนไข้':''}</span></h4>${services.map((s,i)=>`<div class="svc-bar rank-${i+1}"><div class="name">${i+1}. ${s.name}</div><div class="gauge"><div class="fill" style="width:${(s.qty/max)*100}%"></div></div><div class="qty">${s.qty}</div></div>`).join('')}</div>`;}).join('');const trackedNames=['ultrasound2D-transvagina','ตรวจภายใน','ultrasound2D-ANC follow up'];const xLabels=orderedKeys.map(ym=>monthlyData.find(m=>m.ym===ym)?.label||ym);const datasets=trackedNames.map((name,i)=>({label:name,data:orderedKeys.map(ym=>{const svc=(monthlyTopSvc[ym]||[]).find(s=>s.name===name);return svc?svc.qty:0;}),borderColor:[COLORS.primary,COLORS.green,COLORS.orange][i],backgroundColor:[COLORS.primary,COLORS.green,COLORS.orange][i]+'20',tension:.4,fill:false,pointRadius:4,borderWidth:3}));if(charts.trendTopSvc)charts.trendTopSvc.destroy();charts.trendTopSvc=new Chart(document.getElementById('trendTopSvcChart'),{type:'line',data:{labels:xLabels,datasets},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',align:'center'}},scales:{x:{grid:{color:'rgba(255,255,255,.04)'}},y:{beginAtZero:true,grid:{color:'rgba(255,255,255,.06)'}}}}});if(charts.monthlyTopRev)charts.monthlyTopRev.destroy();const topPerMonth=orderedKeys.map(ym=>{const s=monthlyTopSvc[ym][0];return{label:monthlyData.find(m=>m.ym===ym)?.label||ym,name:s.name,qty:s.qty};});charts.monthlyTopRev=new Chart(document.getElementById('monthlyTopRevChart'),{type:'bar',data:{labels:topPerMonth.map(t=>t.label),datasets:[{label:'จำนวนครั้ง',data:topPerMonth.map(t=>t.qty),backgroundColor:topPerMonth.map(t=>{const c={'ultrasound2D-transvagina':COLORS.primary,'ตรวจภายใน':COLORS.green,'ค่าตรวจรักษา':COLORS.orange};return c[t.name]||COLORS.purple;}),borderRadius:6}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{title:ctx=>topPerMonth[ctx[0].dataIndex].name,label:ctx=>'  '+ctx.parsed.y+' ครั้ง ('+topPerMonth[ctx.dataIndex].label+')'}}},scales:{x:{grid:{color:'rgba(255,255,255,.04)'}},y:{beginAtZero:true,grid:{color:'rgba(255,255,255,.06)'}}}}});}
-function initDailyData(){const lb1=document.getElementById('live-badge-1');const lb2=document.getElementById('live-badge-2');const billStatus=document.getElementById('bill-status');dailyData=[];for(const ym in dailyByMonth){const[y,m]=ym.split('-').map(Number);for(const[day,newP,repeat] of dailyByMonth[ym]){const date=`${y}-${String(m).padStart(2,'0')}-${String(day).padStart(2,'0')}`;dailyData.push({date,patients:newP+repeat,newP,oldP:repeat,dow:new Date(date+'T00:00:00').getDay(),ym});}}dailyData.sort((a,b)=>a.date.localeCompare(b.date));dowByMonth=computeDowByMonth(dailyData);lb1.textContent=dailyData.length+' วันทำการ';lb2.textContent='5 เดือน';billStatus.innerHTML=' • <span style="color:#34d399">●</span> ข้อมูลรายวันจาก patient2026 ('+dailyData.length+' วัน)';renderDailyTab();}
-function computeDowByMonth(daily){const result={};for(const d of daily){const[y,m]=d.ym.split('-').map(Number);const ymKey=`${y+543}-${String(m).padStart(2,'0')}`;if(!result[ymKey])result[ymKey]={dowArr:[[],[],[],[],[],[],[]],dates:[],total:0};result[ymKey].dowArr[d.dow].push(d.patients);result[ymKey].dates.push(d);result[ymKey].total+=d.patients;}for(const k of Object.keys(result)){const r=result[k];r.dowAvg=r.dowArr.map(arr=>arr.length?arr.reduce((a,b)=>a+b,0)/arr.length:0);r.dowCount=r.dowArr.map(arr=>arr.length);let maxIdx=0,minIdx=-1,maxV=-1,minV=Infinity;r.dowAvg.forEach((v,i)=>{if(v>maxV){maxV=v;maxIdx=i;}if(v>0&&v<minV){minV=v;minIdx=i;}});r.maxDow=maxIdx;r.minDow=minIdx>=0?minIdx:maxIdx;}return result;}
-function getFilteredDailyData(){if(!dailyData)return[];const buddhYM=d=>{const[y,m]=d.ym.split('-').map(Number);return`${y+543}-${String(m).padStart(2,'0')}`;};if(state.range&&state.range.startsWith('month:')){const sel=state.range.slice(6);return dailyData.filter(d=>buddhYM(d)===sel);}if(state.range==='2568')return[];if(state.range==='2569')return dailyData.filter(d=>buddhYM(d).startsWith('2569-'));if(state.range==='6mo'||state.range==='3mo'){const filteredMonthly=getFilteredData();const ymSet=new Set(filteredMonthly.map(m=>m.ym));return dailyData.filter(d=>ymSet.has(buddhYM(d)));}return dailyData;}
-function renderDailyKPIs(){if(!dailyData)return;const data=getFilteredDailyData();const elAvg=document.getElementById('kpi-avg-patient-day');const elMax=document.getElementById('kpi-max-day');const elMaxV=document.getElementById('kpi-max-day-val');const elMin=document.getElementById('kpi-min-day');const elMinV=document.getElementById('kpi-min-day-val');const elDays=document.getElementById('kpi-total-days');if(data.length===0){elAvg.innerHTML='—';elMax.innerHTML='—';elMaxV.textContent='ไม่มีข้อมูลรายวัน';elMin.innerHTML='—';elMinV.textContent='ไม่มีข้อมูลรายวัน';elDays.innerHTML='0<span class="unit"> วัน</span>';if(charts.dailyTimeline)charts.dailyTimeline.destroy();charts.dailyTimeline=null;return;}const totalPatients=data.reduce((s,d)=>s+d.patients,0);const totalDays=data.length;const avg=totalPatients/totalDays;let maxDay=data[0],minDay=data[0];for(const d of data){if(d.patients>maxDay.patients)maxDay=d;if(d.patients<minDay.patients)minDay=d;}elAvg.innerHTML=avg.toFixed(1)+'<span class="unit"> ราย</span>';elMax.innerHTML=fmt(maxDay.patients)+'<span class="unit"> ราย</span>';elMaxV.textContent=formatDateThai(maxDay.date)+' ('+DOW_FULL[maxDay.dow]+')';elMin.innerHTML=fmt(minDay.patients)+'<span class="unit"> ราย</span>';elMinV.textContent=formatDateThai(minDay.date)+' ('+DOW_FULL[minDay.dow]+')';elDays.innerHTML=fmt(totalDays)+'<span class="unit"> วัน</span>';if(charts.dailyTimeline)charts.dailyTimeline.destroy();charts.dailyTimeline=new Chart(document.getElementById('dailyTimelineChart'),{type:'line',data:{labels:data.map(d=>d.date),datasets:[{label:'คนไข้/วัน',data:data.map(d=>d.patients),borderColor:COLORS.purple,backgroundColor:ctx=>makeGradient(ctx,COLORS.purple),tension:.3,fill:true,pointRadius:data.length<40?4:2,pointHoverRadius:6,borderWidth:2}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{title:ctx=>formatDateThai(ctx[0].label),label:ctx=>'  '+ctx.parsed.y+' ราย ('+DOW_FULL[new Date(ctx.label+'T00:00:00').getDay()]+')'}}},scales:{x:{ticks:{maxRotation:60,autoSkip:true,maxTicksLimit:20},grid:{color:'rgba(255,255,255,.04)'}},y:{beginAtZero:true,grid:{color:'rgba(255,255,255,.06)'}}}}});}
-function renderDailyTab(){if(!dailyData||!dowByMonth)return;renderDailyKPIs();const months=Object.keys(dowByMonth).sort();const selector=document.getElementById('dowMonthSelector');selector.innerHTML=months.map(m=>{const md=monthlyData.find(x=>x.ym===m);return `<button class="month-chip" data-month="${m}">${md?md.label:m}</button>`;}).join('');selector.querySelectorAll('.month-chip').forEach(btn=>btn.addEventListener('click',()=>{state.dowMonth=btn.dataset.month;selector.querySelectorAll('.month-chip').forEach(b=>b.classList.remove('active'));btn.classList.add('active');renderDowMonth();}));state.dowMonth=months[months.length-1];if(selector.querySelector(`[data-month="${state.dowMonth}"]`))selector.querySelector(`[data-month="${state.dowMonth}"]`).classList.add('active');renderDowMonth();renderDowSummaryTable();}
-function renderDowMonth(){if(!dowByMonth||!state.dowMonth)return;const r=dowByMonth[state.dowMonth];if(!r)return;if(charts.dow)charts.dow.destroy();charts.dow=new Chart(document.getElementById('dowChart'),{type:'bar',data:{labels:DOW_FULL,datasets:[{label:'คนไข้เฉลี่ย',data:r.dowAvg.map(v=>v.toFixed(1)),backgroundColor:r.dowAvg.map((v,i)=>i===r.maxDow?COLORS.green:i===r.minDow&&v>0?COLORS.orange:COLORS.primaryLight),borderRadius:8}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>'  '+ctx.parsed.y+' ราย (เฉลี่ยจาก '+r.dowCount[ctx.dataIndex]+' วัน)'}}},scales:{x:{grid:{display:false}},y:{beginAtZero:true,grid:{color:'rgba(255,255,255,.06)'}}}}});const grid=document.getElementById('dowGrid');grid.innerHTML=DOW_NAMES.map((n,i)=>{let cls='';if(r.dowAvg[i]===0)cls='zero';else if(i===r.maxDow)cls='max';else if(i===r.minDow)cls='min';return `<div class="dow-cell ${cls}"><div class="dow-name">${n}</div><div class="dow-val">${r.dowAvg[i].toFixed(1)}</div><div class="dow-unit">${r.dowCount[i]} วัน</div></div>`;}).join('');}
-function renderDowSummaryTable(){if(!dowByMonth)return;const months=Object.keys(dowByMonth).sort();document.getElementById('dowSummaryBody').innerHTML=months.map(m=>{const r=dowByMonth[m];const md=monthlyData.find(x=>x.ym===m);const maxN=DOW_NAMES[r.maxDow]+'. ('+r.dowAvg[r.maxDow].toFixed(1)+')';const minN=r.dowAvg[r.minDow]>0?DOW_NAMES[r.minDow]+'. ('+r.dowAvg[r.minDow].toFixed(1)+')':'—';return `<tr><td><strong style="color:#e2e8f0">${md?md.label:m}</strong></td>${r.dowAvg.map((v,i)=>`<td class="right" style="${i===r.maxDow?'background:rgba(52,211,153,.12);color:#34d399;font-weight:700':i===r.minDow&&v>0?'background:rgba(251,146,60,.12);color:#fb923c;font-weight:700':''}">${v>0?v.toFixed(1):'—'}</td>`).join('')}<td class="right" style="color:#34d399;font-weight:600">${maxN}</td><td class="right" style="color:#fb923c;font-weight:600">${minN}</td></tr>`;}).join('');}
-function formatDateThai(d){const[y,m,dd]=d.split('-');const months=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];return parseInt(dd)+' '+months[parseInt(m)-1]+' '+(parseInt(y)+543).toString().slice(-2);}
-function renderFbChart(){if(charts.fb)charts.fb.destroy();charts.fb=new Chart(document.getElementById('fbViewsChart'),{type:'line',data:{labels:fbWeekly.map(w=>w.wk),datasets:[{label:'ยอดดู',data:fbWeekly.map(w=>w.views),borderColor:COLORS.primary,backgroundColor:ctx=>makeGradient(ctx,COLORS.primary),tension:.35,fill:true,pointRadius:3,borderWidth:2.5},{label:'ผู้ชม',data:fbWeekly.map(w=>w.viewers),borderColor:COLORS.orange,backgroundColor:'transparent',tension:.35,fill:false,pointRadius:3,borderWidth:2.5}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',align:'end'}},scales:{x:{grid:{color:'rgba(255,255,255,.04)'},ticks:{maxRotation:60,minRotation:45,autoSkip:true}},y:{beginAtZero:true,ticks:{callback:v=>fmt(v)},grid:{color:'rgba(255,255,255,.06)'}}}}});}
-function renderTtChart(){if(charts.tt)charts.tt.destroy();charts.tt=new Chart(document.getElementById('ttViewsChart'),{type:'bar',data:{labels:ttWeekly.map(w=>w.wk),datasets:[{label:'ยอดชม',data:ttWeekly.map(w=>w.views),backgroundColor:COLORS.purpleLight,borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{color:'rgba(255,255,255,.04)'},ticks:{maxRotation:60,minRotation:45,autoSkip:true}},y:{beginAtZero:true,ticks:{callback:v=>fmt(v)},grid:{color:'rgba(255,255,255,.06)'}}}}});}
-function renderLineChart(){if(charts.line)charts.line.destroy();charts.line=new Chart(document.getElementById('lineChart'),{type:'bar',data:{labels:lineWeekly.map(w=>w.wk),datasets:[{label:'จากลิงก์',data:lineWeekly.map(w=>w.link),backgroundColor:COLORS.green,borderRadius:4},{label:'จากโปสเตอร์',data:lineWeekly.map(w=>w.poster),backgroundColor:COLORS.greenLight,borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',align:'end'}},scales:{x:{stacked:true,grid:{color:'rgba(255,255,255,.04)'},ticks:{maxRotation:60,minRotation:45,autoSkip:true}},y:{stacked:true,beginAtZero:true,grid:{color:'rgba(255,255,255,.06)'}}}}});}
-function renderAll(){renderKPIs();renderRevenueTrend();renderPatientChart();renderAvgDayChart();renderPatientTotalChart();renderPatientRatioChart();renderNewPatientTrendChart();renderGrowthChart();renderRevenueTable();if(dailyData)renderDailyKPIs();}
-document.getElementById('rangeChips').addEventListener('click',e=>{if(!e.target.matches('.chip'))return;document.querySelectorAll('#rangeChips .chip').forEach(c=>c.classList.remove('active'));e.target.classList.add('active');state.range=e.target.dataset.range;document.getElementById('monthSelect').value='';document.getElementById('monthDetail').classList.remove('show');renderAll();});
-(function(){const sel=document.getElementById('monthSelect');monthlyData.forEach(m=>{const opt=document.createElement('option');opt.value=m.ym;opt.textContent=m.label;sel.appendChild(opt);});sel.addEventListener('change',e=>{const v=e.target.value;if(v){state.range='month:'+v;document.querySelectorAll('#rangeChips .chip').forEach(c=>c.classList.remove('active'));}else{state.range='all';document.querySelector('#rangeChips .chip[data-range="all"]').classList.add('active');}document.getElementById('monthDetail').classList.remove('show');renderAll();});})();
-document.getElementById('tabBar').addEventListener('click',e=>{if(!e.target.matches('.tab'))return;document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));e.target.classList.add('active');document.querySelectorAll('.tab-pane').forEach(p=>p.classList.remove('active'));document.getElementById('tab-'+e.target.dataset.tab).classList.add('active');setTimeout(()=>Object.values(charts).forEach(c=>c&&c.resize&&c.resize()),60);});
-document.querySelectorAll('[data-trend]').forEach(btn=>btn.addEventListener('click',()=>{document.querySelectorAll('[data-trend]').forEach(b=>b.classList.remove('active'));btn.classList.add('active');state.trend=btn.dataset.trend;renderRevenueTrend();}));
-document.querySelectorAll('[data-patient]').forEach(btn=>btn.addEventListener('click',()=>{document.querySelectorAll('[data-patient]').forEach(b=>b.classList.remove('active'));btn.classList.add('active');state.patientView=btn.dataset.patient;renderPatientChart();}));
-document.querySelectorAll('[data-svc]').forEach(btn=>btn.addEventListener('click',()=>{document.querySelectorAll('[data-svc]').forEach(b=>b.classList.remove('active'));btn.classList.add('active');state.serviceView=btn.dataset.svc;renderTopServiceChart();}));
-document.getElementById('svcSearch').addEventListener('input',e=>{state.svcSearch=e.target.value;renderAllServices();});
-document.getElementById('svcSort').addEventListener('change',e=>{state.svcSort=e.target.value;renderAllServices();});
-document.querySelectorAll('#revenueTable th[data-sort]').forEach(th=>th.addEventListener('click',()=>{const k=th.dataset.sort;if(state.revSort.key===k)state.revSort.dir=state.revSort.dir==='asc'?'desc':'asc';else{state.revSort.key=k;state.revSort.dir='desc';}renderRevenueTable();}));
-// ===== SERVICE MONTHLY ANALYSIS =====
-let svcMonthlyMap={};
-let svcFilterMonths=null;
-let svcCompareSet=new Set();
-let svcViewMode='all';
-let svcExpandedIdx=null;
 
-function buildSvcMonthlyMap(){
-  svcMonthlyMap={};
-  Object.entries(monthlyTopSvc).forEach(([ym,svcs])=>{
-    svcs.forEach(({name,qty})=>{
-      if(!svcMonthlyMap[name])svcMonthlyMap[name]={};
-      svcMonthlyMap[name][ym]=qty;
-    });
-  });
+<!-- TABS -->
+<div class="tabs" id="tabBar">
+<button class="tab active" data-tab="exec">🎯 Command Center</button>
+<button class="tab" data-tab="trend">📈 Monthly Trend</button>
+<button class="tab" data-tab="service">🏥 Service Performance</button>
+<button class="tab" data-tab="retention">👥 Patient Retention</button>
+<button class="tab" data-tab="social">📱 Social Efficiency</button>
+<button class="tab" data-tab="profit">💰 Profit & Expense</button>
+</div>
+
+<!-- ===== TAB 1: EXECUTIVE COMMAND CENTER ===== -->
+<div class="tab-pane active" id="tab-exec">
+<div class="kpi-grid" id="kpi-main"></div>
+<div class="kpi-grid-3" id="kpi-rates"></div>
+<div class="kpi-grid-3" id="kpi-mom"></div>
+<div class="row2">
+<div class="section"><div class="section-head"><h2>📈 Revenue Trend</h2>
+<div class="toggle-grp"><button class="tog active" data-exec="monthly">รายเดือน</button><button class="tog" data-exec="cumulative">สะสม</button></div></div>
+<div class="chart-box"><canvas id="execRevChart"></canvas></div></div>
+<div class="section"><h2>👥 คนไข้ใหม่ vs เก่า</h2>
+<div class="chart-box"><canvas id="execPatChart"></canvas></div></div>
+</div>
+</div>
+
+<!-- ===== TAB 2: MONTHLY TREND ===== -->
+<div class="tab-pane" id="tab-trend">
+<div class="section"><div class="section-head"><h2>📈 แนวโน้มหลายมิติ</h2>
+<div class="toggle-grp" id="trendToggle">
+<button class="tog active" data-metric="revenue">รายได้</button>
+<button class="tog" data-metric="bills">จำนวนบิล</button>
+<button class="tog" data-metric="patients">คนไข้</button>
+<button class="tog" data-metric="avgbill">เฉลี่ย/บิล</button>
+</div></div>
+<div class="desc">💡 เดือนที่มี <span class="partial-badge">ไม่ครบเดือน</span> จะแสดงเส้นประ — ไม่ควรนำเทียบตรงกับเดือนที่เต็ม</div>
+<div class="chart-box chart-tall"><canvas id="trendMainChart"></canvas></div></div>
+<div class="row2">
+<div class="section"><h2>🔀 New vs Repeat Patient / เดือน</h2>
+<div class="chart-box"><canvas id="trendNRChart"></canvas></div></div>
+<div class="section"><h2>📊 อัตราการเติบโต % (MoM)</h2>
+<div class="chart-box"><canvas id="trendGrowthChart"></canvas></div></div>
+</div>
+<div class="row2">
+<div class="section"><h2>💵 Average Bill / เดือน</h2>
+<div class="chart-box"><canvas id="trendAvgBillChart"></canvas></div></div>
+<div class="section"><h2>📱 Social Views / เดือน (ประมาณ)</h2>
+<div class="desc" style="margin-bottom:6px;font-size:11px">⚠️ รวมจาก weekly data — ค่าประมาณ ไม่ใช่ยอดรายเดือนจริง</div>
+<div class="chart-box"><canvas id="trendSocialChart"></canvas></div></div>
+</div>
+</div>
+
+<!-- ===== TAB 3: SERVICE PERFORMANCE ===== -->
+<div class="tab-pane" id="tab-service">
+<div class="section"><div class="section-head"><h2>🏆 Top Services</h2>
+<div class="toggle-grp" id="svcToggle">
+<button class="tog active" data-svc="revenue">ตามรายได้</button>
+<button class="tog" data-svc="volume">ตามจำนวน</button>
+<button class="tog" data-svc="avgticket">Avg Ticket</button>
+</div></div>
+<div class="chart-box chart-tall"><canvas id="svcTopChart"></canvas></div></div>
+<div class="row2">
+<div class="section"><h2>📂 รายได้ตาม Category</h2>
+<div class="chart-box"><canvas id="svcCatRevChart"></canvas></div></div>
+<div class="section"><h2>📂 จำนวนครั้งตาม Category</h2>
+<div class="chart-box"><canvas id="svcCatVolChart"></canvas></div></div>
+</div>
+<div class="section"><div class="section-head"><h2>🎯 Strategic Role View</h2>
+<div class="chip-group" id="roleFilter">
+<button class="chip active" data-role="all">ทั้งหมด</button>
+<button class="chip" data-role="entry">🚪 Entry Service</button>
+<button class="chip" data-role="retention">🔄 Retention Service</button>
+<button class="chip" data-role="high_ticket">💎 High Ticket</button>
+<button class="chip" data-role="core">⚙️ Core Volume</button>
+</div></div>
+<div class="desc">Entry = บริการดึงคนไข้ใหม่ (ราคาต่ำ/ตรวจครั้งแรก) • Retention = ต้องมาซ้ำโดยธรรมชาติ • High Ticket = รายได้สูงต่อครั้ง • Core = ปริมาณหลักของคลินิก</div>
+<div class="search-row"><input type="text" class="search-in" id="svcSearch" placeholder="🔎 ค้นหาบริการ...">
+<select class="sort-sel" id="svcSort"><option value="sum-desc">เรียงรายได้ ↓</option><option value="sum-asc">รายได้ ↑</option><option value="qty-desc">จำนวน ↓</option><option value="price-desc">ราคา ↓</option></select></div>
+<div class="tbl-wrap" style="max-height:520px;overflow-y:auto"><table class="tbl" id="svcTbl">
+<thead><tr><th style="width:36px">#</th><th data-sort="clean">บริการ</th><th data-sort="catLabel">Category</th><th data-sort="roleLabel">Role</th><th class="r" data-sort="price">ราคา</th><th class="r" data-sort="qty">จำนวน</th><th class="r" data-sort="sum">รายได้รวม</th></tr></thead>
+<tbody id="svcBody"></tbody></table></div></div>
+<div class="section"><h2>📈 Service MoM Growth (บริการที่ติดตามได้)</h2>
+<div class="desc">เปรียบเทียบจำนวนครั้งของบริการที่มีข้อมูลรายเดือน</div>
+<div class="chart-box chart-tall"><canvas id="svcMomChart"></canvas></div></div>
+</div>
+
+<!-- ===== TAB 4: PATIENT RETENTION ===== -->
+<div class="tab-pane" id="tab-retention">
+<div class="kpi-grid" id="kpi-ret"></div>
+<div class="row2">
+<div class="section"><h2>🔄 New vs Repeat Patient รายเดือน</h2>
+<div class="chart-box"><canvas id="retNRChart"></canvas></div></div>
+<div class="section"><h2>📊 Repeat Share % รายเดือน</h2>
+<div class="chart-box"><canvas id="retShareChart"></canvas></div></div>
+</div>
+<div class="row2">
+<div class="section"><h2>💰 Revenue per Unique Patient รายเดือน</h2>
+<div class="desc" style="font-size:11px">คำนวณจาก Revenue ÷ Total Patient per Month (Proxy — ยังไม่มี HN tracking)</div>
+<div class="chart-box"><canvas id="retRevPatChart"></canvas></div></div>
+<div class="section"><h2>📈 New Patient Trend</h2>
+<div class="chart-box"><canvas id="retNewTrendChart"></canvas></div></div>
+</div>
+<div class="section"><h2>🔄 บริการที่มี Retention Behavior สูง</h2>
+<div class="desc">บริการที่โดยธรรมชาติต้องมาซ้ำ — นี่คือ Retention Engine ของคลินิก</div>
+<div id="retSvcList"></div></div>
+<div class="section"><h2>⚠️ ข้อจำกัดของข้อมูล Retention ปัจจุบัน</h2>
+<div id="retLimits"></div></div>
+</div>
+
+<!-- ===== TAB 5: SOCIAL EFFICIENCY ===== -->
+<div class="tab-pane" id="tab-social">
+<div class="attr-warn"><div class="title">⚠️ Attribution Disclaimer</div>
+<p>ตัวชี้วัด Social ที่แสดงเป็นเพียง <strong>Engagement Trend</strong> เท่านั้น — ยังไม่สามารถบอกได้ว่า Social Channel ไหนสร้างรายได้จริง เนื่องจากยังไม่มีการเชื่อม Source Channel กับ Patient Revenue (Lead Source Tracking ยังไม่มีข้อมูล) ห้ามใช้ตัวเลขนี้ตัดสินใจงบโฆษณาโดยตรง</p></div>
+<div class="social-grid">
+<div class="social-card fb"><div class="plat">📘 Facebook</div>
+<div class="social-stat"><span class="sl">ยอดดู (ล่าสุด)</span><span class="sv" id="fbLastViews">—</span></div>
+<div class="social-stat"><span class="sl">ผู้ชม (ล่าสุด)</span><span class="sv" id="fbLastViewers">—</span></div>
+<div class="social-stat"><span class="sl">Messages (ล่าสุด)</span><span class="sv" id="fbLastMsg">—</span></div>
+<div class="social-stat"><span class="sl">Message Rate (ประมาณ)</span><span class="sv" id="fbMsgRate">—</span></div>
+<div class="social-stat"><span class="sl">Msg per 10K Views</span><span class="sv" id="fbMsg10k">—</span></div>
+</div>
+<div class="social-card tt"><div class="plat">🎵 TikTok</div>
+<div class="social-stat"><span class="sl">ยอดชม (ล่าสุด)</span><span class="sv" id="ttLastViews">—</span></div>
+<div class="social-stat"><span class="sl">คอนเวอร์ชัน</span><span class="sv">1 <span class="partial-badge">ข้อมูลไม่ครบ</span></span></div>
+<div class="social-stat"><span class="sl">ผู้ติดตาม</span><span class="sv">74</span></div>
+<div class="social-stat"><span class="sl">Message Rate</span><span class="sv"><span class="na-val">ไม่มีข้อมูล</span></span></div>
+</div>
+<div class="social-card ln"><div class="plat">💬 LINE OA</div>
+<div class="social-stat"><span class="sl">เพื่อนใหม่ (ล่าสุด)</span><span class="sv" id="lineLastFriends">—</span></div>
+<div class="social-stat"><span class="sl">จากลิงก์</span><span class="sv" id="lineLastLink">—</span></div>
+<div class="social-stat"><span class="sl">จากโปสเตอร์</span><span class="sv" id="lineLastPoster">—</span></div>
+<div class="social-stat"><span class="sl">Revenue Attribution</span><span class="sv"><span class="na-val">ยังไม่มีข้อมูล</span></span></div>
+</div></div>
+<div class="row2">
+<div class="section"><h2>📘 Facebook Views รายสัปดาห์</h2>
+<div class="chart-box chart-tall"><canvas id="fbChart"></canvas></div></div>
+<div class="section"><h2>🎵 TikTok Views รายสัปดาห์</h2>
+<div class="chart-box chart-tall"><canvas id="ttChart"></canvas></div></div>
+</div>
+<div class="row2">
+<div class="section"><h2>💬 LINE OA — เพิ่มเพื่อนใหม่</h2>
+<div class="chart-box"><canvas id="lineChart"></canvas></div></div>
+<div class="section"><h2>📊 Social Monthly Estimate</h2>
+<div class="desc" style="font-size:11px">⚠️ ประมาณจาก weekly data — ใช้สำหรับ trend เท่านั้น</div>
+<div class="chart-box"><canvas id="socialMonthlyChart"></canvas></div></div>
+</div>
+<div class="section"><h2>📋 ข้อมูลที่ยังต้องเก็บเพิ่ม</h2>
+<div id="socialNeeds"></div></div>
+</div>
+
+<!-- ===== TAB 6: PROFIT & EXPENSE ===== -->
+<div class="tab-pane" id="tab-profit">
+<div class="kpi-grid" id="kpi-profit"></div>
+<div class="section"><h2>📈 Revenue รายเดือน (ข้อมูลมีแล้ว)</h2>
+<div class="chart-box chart-tall"><canvas id="profitRevChart"></canvas></div></div>
+<div class="row2">
+<div class="section"><div class="empty-state">
+<div class="icon">📊</div>
+<h3>Expense Data ยังไม่มี</h3>
+<p>ยังไม่ได้นำเข้าข้อมูลรายจ่ายรายเดือน<br>ไม่สามารถคำนวณ Net Profit, Net Margin, Break-even ได้</p>
+<div class="data-need-grid">
+<div class="data-need"><h4>💼 Fixed Costs (ต้องการ)</h4>
+<ul><li>ค่าเช่าสถานที่/เดือน</li><li>เงินเดือนพนักงาน</li><li>ค่าสาธารณูปโภค</li><li>ค่าประกัน/ใบอนุญาต</li></ul></div>
+<div class="data-need"><h4>🔧 Variable Costs (ต้องการ)</h4>
+<ul><li>ต้นทุนยาและเวชภัณฑ์</li><li>ค่าส่งตรวจ Lab</li><li>ค่าอุปกรณ์สิ้นเปลือง</li><li>Commission/OT</li></ul></div>
+<div class="data-need"><h4>📢 Marketing Spend (ต้องการ)</h4>
+<ul><li>ค่าโฆษณา Facebook/Meta</li><li>ค่าโฆษณา TikTok</li><li>ค่า Content/KOL</li><li>ค่า Boost ต่าง ๆ</li></ul></div>
+</div>
+</div></div>
+<div class="section"><div class="empty-state">
+<div class="icon">💹</div>
+<h3>Net Profit — คำนวณไม่ได้ยังนี้</h3>
+<p>Net Profit = Income − Expense<br>Net Margin = Net Profit / Income × 100</p>
+<p style="margin-top:10px;color:var(--yellow)">⚠️ ขณะนี้มีแค่ Revenue (Income side) ยังขาดข้อมูล Expense ทั้งหมด</p>
+</div></div>
+</div>
+<div class="section"><h2>📋 สรุปสิ่งที่ยังคำนวณไม่ได้จริงในตอนนี้</h2>
+<div id="cannotCalc"></div></div>
+</div>
+
+<div class="footer">📊 ภิรมย์คลินิก Executive Dashboard • ข้อมูล เม.ย. 2568 – พ.ค. 2569</div>
+</div>
+
+<script>
+// ============================================================
+// DATA LAYER
+// ============================================================
+const MS=[
+ {ym:'2568-04',label:'เม.ย. 68',yr:'2568',mo:4,revenue:29089,bills:34,uPat:34,newP:6,repP:28,openDays:13,perDay:2237,income:29089,expense:null,partial:false,warnTags:['no_expense','no_social']},
+ {ym:'2568-05',label:'พ.ค. 68',yr:'2568',mo:5,revenue:148998,bills:94,uPat:94,newP:21,repP:73,openDays:27,perDay:5518,income:148998,expense:null,partial:false,warnTags:['no_expense','no_social']},
+ {ym:'2568-06',label:'มิ.ย. 68',yr:'2568',mo:6,revenue:179562,bills:124,uPat:124,newP:29,repP:95,openDays:24,perDay:7481,income:179562,expense:null,partial:false,warnTags:['no_expense','no_social']},
+ {ym:'2568-07',label:'ก.ค. 68',yr:'2568',mo:7,revenue:341599,bills:168,uPat:168,newP:52,repP:116,openDays:28,perDay:12199,income:341599,expense:null,partial:false,warnTags:['no_expense','no_social']},
+ {ym:'2568-08',label:'ส.ค. 68',yr:'2568',mo:8,revenue:391872,bills:257,uPat:257,newP:92,repP:165,openDays:27,perDay:14513,income:391872,expense:null,partial:false,warnTags:['no_expense','no_social']},
+ {ym:'2568-09',label:'ก.ย. 68',yr:'2568',mo:9,revenue:430494,bills:265,uPat:265,newP:117,repP:148,openDays:26,perDay:16557,income:430494,expense:null,partial:false,warnTags:['no_expense','no_social']},
+ {ym:'2568-10',label:'ต.ค. 68',yr:'2568',mo:10,revenue:380989,bills:258,uPat:258,newP:109,repP:149,openDays:25,perDay:15239,income:380989,expense:null,partial:false,warnTags:['no_expense','partial_social']},
+ {ym:'2568-11',label:'พ.ย. 68',yr:'2568',mo:11,revenue:462781,bills:270,uPat:270,newP:150,repP:120,openDays:23,perDay:20120,income:462781,expense:null,partial:false,fbViews:489337,ttViews:335890,lineF:166,warnTags:['no_expense']},
+ {ym:'2568-12',label:'ธ.ค. 68',yr:'2568',mo:12,revenue:546053,bills:301,uPat:301,newP:143,repP:158,openDays:26,perDay:21002,income:546053,expense:null,partial:false,fbViews:457807,ttViews:475844,lineF:180,warnTags:['no_expense']},
+ {ym:'2569-01',label:'ม.ค. 69',yr:'2569',mo:1,revenue:587675,bills:310,uPat:310,newP:153,repP:157,openDays:24,perDay:24236,income:587675,expense:null,partial:false,fbViews:591898,ttViews:356031,lineF:167,warnTags:['no_expense']},
+ {ym:'2569-02',label:'ก.พ. 69',yr:'2569',mo:2,revenue:577191,bills:310,uPat:310,newP:172,repP:138,openDays:24,perDay:24049,income:577191,expense:null,partial:false,fbViews:139167,ttViews:244275,lineF:46,warnTags:['no_expense','partial_social']},
+ {ym:'2569-03',label:'มี.ค. 69',yr:'2569',mo:3,revenue:689732,bills:382,uPat:382,newP:209,repP:173,openDays:25,perDay:27589,income:689732,expense:null,partial:false,fbViews:594025,ttViews:null,lineF:null,warnTags:['no_expense','partial_social']},
+ {ym:'2569-04',label:'เม.ย. 69',yr:'2569',mo:4,revenue:557210,bills:305,uPat:305,newP:135,repP:170,openDays:20,perDay:27860,income:557210,expense:null,partial:true,fbViews:null,ttViews:null,lineF:null,warnTags:['partial_month','no_expense','no_social']}
+];
+
+// Service Mapping: rawName, clean, cat, catLabel, role, roleLabel, price, qty, sum, isHT, isRet, isEntry
+const SVC=[
+ {raw:'DF-ค่าตรวจรักษา',clean:'ค่าตรวจรักษา (DF)',cat:'consultation',catL:'ตรวจรักษา',role:'entry',roleL:'Entry',price:350,qty:993,sum:317600,isHT:false,isRet:false,isEntry:true},
+ {raw:'ultrasound2D-transvagina',clean:'Ultrasound TV',cat:'imaging',catL:'อัลตร้าซาวด์',role:'core',roleL:'Core',price:850,qty:265,sum:221500,isHT:false,isRet:true,isEntry:false},
+ {raw:'OBG-PV+Thinprep+HPV21+TVS',clean:'Pap+HPV+TVS',cat:'preventive',catL:'ตรวจป้องกัน',role:'high_ticket',roleL:'High Ticket',price:3000,qty:44,sum:132000,isHT:true,isRet:false,isEntry:false},
+ {raw:'OBG-PV+thinprep+HPV21',clean:'Pap+HPV',cat:'preventive',catL:'ตรวจป้องกัน',role:'high_ticket',roleL:'High Ticket',price:2200,qty:44,sum:96800,isHT:true,isRet:false,isEntry:false},
+ {raw:'obg-ฝากครรภ์ครั้งแรก GA<12wk',clean:'ฝากครรภ์แรก <12wk',cat:'anc',catL:'ฝากครรภ์/ก่อนคลอด',role:'retention',roleL:'Retention',price:2350,qty:40,sum:94000,isHT:false,isRet:true,isEntry:false},
+ {raw:'ultrasound2D-ANC follow up',clean:'Ultrasound ANC Follow',cat:'imaging',catL:'อัลตร้าซาวด์',role:'retention',roleL:'Retention',price:600,qty:116,sum:69600,isHT:false,isRet:true,isEntry:false},
+ {raw:'obg-ฝากครรภ์ครั้งต่อไป',clean:'ฝากครรภ์ครั้งต่อไป',cat:'anc',catL:'ฝากครรภ์/ก่อนคลอด',role:'retention',roleL:'Retention',price:1200,qty:57,sum:68400,isHT:false,isRet:true,isEntry:false},
+ {raw:'NIPT advanced 23คู่',clean:'NIPT Advanced',cat:'anc',catL:'ฝากครรภ์/ก่อนคลอด',role:'high_ticket',roleL:'High Ticket',price:10900,qty:6,sum:65400,isHT:true,isRet:false,isEntry:false},
+ {raw:'OBG- STIs 15 profile',clean:'STIs 15 Profile',cat:'preventive',catL:'ตรวจป้องกัน',role:'high_ticket',roleL:'High Ticket',price:2890,qty:22,sum:63580,isHT:true,isRet:false,isEntry:false},
+ {raw:'ค่าตรวจภายใน',clean:'ตรวจภายใน',cat:'consultation',catL:'ตรวจรักษา',role:'entry',roleL:'Entry',price:200,qty:245,sum:49000,isHT:false,isRet:false,isEntry:true},
+ {raw:'ultrasound2D-ANC ครั้งแรก',clean:'Ultrasound ANC แรก',cat:'imaging',catL:'อัลตร้าซาวด์',role:'retention',roleL:'Retention',price:800,qty:51,sum:40800,isHT:false,isRet:true,isEntry:false},
+ {raw:'NIPT basic 13,18,21',clean:'NIPT Basic',cat:'anc',catL:'ฝากครรภ์/ก่อนคลอด',role:'high_ticket',roleL:'High Ticket',price:7900,qty:5,sum:39500,isHT:true,isRet:false,isEntry:false},
+ {raw:'complete NIPT 96 โรค',clean:'NIPT 96 โรค',cat:'anc',catL:'ฝากครรภ์/ก่อนคลอด',role:'high_ticket',roleL:'High Ticket',price:16900,qty:2,sum:33800,isHT:true,isRet:false,isEntry:false},
+ {raw:'ultrasound2D-anomaly',clean:'Ultrasound Anomaly',cat:'imaging',catL:'อัลตร้าซาวด์',role:'retention',roleL:'Retention',price:1000,qty:31,sum:31000,isHT:false,isRet:true,isEntry:false},
+ {raw:'DF off implanon',clean:'ถอด Implanon',cat:'procedure',catL:'หัตถการ',role:'core',roleL:'Core',price:1400,qty:22,sum:30800,isHT:false,isRet:false,isEntry:false},
+ {raw:'ultrasound MFM',clean:'Ultrasound MFM',cat:'imaging',catL:'อัลตร้าซาวด์',role:'high_ticket',roleL:'High Ticket',price:2350,qty:13,sum:30550,isHT:true,isRet:false,isEntry:false},
+ {raw:'OBG-PV+Thinprep',clean:'Pap Smear (TV)',cat:'preventive',catL:'ตรวจป้องกัน',role:'core',roleL:'Core',price:1400,qty:21,sum:29400,isHT:false,isRet:false,isEntry:false},
+ {raw:'OBG-PV+thinprep+TVS',clean:'Pap+TVS',cat:'preventive',catL:'ตรวจป้องกัน',role:'high_ticket',roleL:'High Ticket',price:2200,qty:13,sum:28600,isHT:true,isRet:false,isEntry:false},
+ {raw:'STD 12 profile',clean:'STD 12 Profile',cat:'preventive',catL:'ตรวจป้องกัน',role:'core',roleL:'Core',price:1590,qty:15,sum:23850,isHT:false,isRet:false,isEntry:false},
+ {raw:'ปากกา Mounjaro 2.5 mg',clean:'Mounjaro 2.5mg',cat:'weight',catL:'ลดน้ำหนัก',role:'high_ticket',roleL:'High Ticket',price:11900,qty:2,sum:23800,isHT:true,isRet:true,isEntry:false},
+ {raw:'obg-ฝากครรภ์ครั้งแรก GA>12wk',clean:'ฝากครรภ์แรก >12wk',cat:'anc',catL:'ฝากครรภ์/ก่อนคลอด',role:'retention',roleL:'Retention',price:2350,qty:10,sum:23500,isHT:false,isRet:true,isEntry:false},
+ {raw:'OBG-amenorrhea (TSH,PRL+TVS)',clean:'Amenorrhea (TSH+TVS)',cat:'consultation',catL:'ตรวจรักษา',role:'core',roleL:'Core',price:2250,qty:10,sum:22500,isHT:false,isRet:false,isEntry:false},
+ {raw:'ultrasound3D/4D',clean:'Ultrasound 3D/4D',cat:'imaging',catL:'อัลตร้าซาวด์',role:'high_ticket',roleL:'High Ticket',price:2000,qty:11,sum:22000,isHT:true,isRet:false,isEntry:false},
+ {raw:'endometrial sampling',clean:'Endometrial Sampling',cat:'procedure',catL:'หัตถการ',role:'high_ticket',roleL:'High Ticket',price:2500,qty:8,sum:20000,isHT:true,isRet:false,isEntry:false},
+ {raw:'ปากกา Mounjaro 7.5 mg',clean:'Mounjaro 7.5mg',cat:'weight',catL:'ลดน้ำหนัก',role:'high_ticket',roleL:'High Ticket',price:19900,qty:1,sum:19900,isHT:true,isRet:true,isEntry:false},
+ {raw:'ปากกา Mounjaro 5mg',clean:'Mounjaro 5mg',cat:'weight',catL:'ลดน้ำหนัก',role:'high_ticket',roleL:'High Ticket',price:16900,qty:1,sum:16900,isHT:true,isRet:true,isEntry:false},
+ {raw:'DF Implanon',clean:'ฝัง Implanon (DF)',cat:'procedure',catL:'หัตถการ',role:'core',roleL:'Core',price:3850,qty:4,sum:15400,isHT:false,isRet:false,isEntry:false},
+ {raw:'Implanon (ฝัง+off)',clean:'Implanon ฝัง+ถอด',cat:'procedure',catL:'หัตถการ',role:'core',roleL:'Core',price:4850,qty:3,sum:14550,isHT:false,isRet:false,isEntry:false},
+ {raw:'OBG-amenorrhea full',clean:'Amenorrhea Full',cat:'consultation',catL:'ตรวจรักษา',role:'high_ticket',roleL:'High Ticket',price:3333,qty:4,sum:13332,isHT:true,isRet:false,isEntry:false},
+ {raw:'copper IUD',clean:'Copper IUD',cat:'procedure',catL:'หัตถการ',role:'core',roleL:'Core',price:2800,qty:4,sum:11200,isHT:false,isRet:false,isEntry:false},
+ {raw:'Quad test',clean:'Quad Test',cat:'anc',catL:'ฝากครรภ์/ก่อนคลอด',role:'core',roleL:'Core',price:2490,qty:4,sum:9960,isHT:false,isRet:false,isEntry:false},
+ {raw:'NST-fetal monitoring',clean:'NST Fetal Monitoring',cat:'anc',catL:'ฝากครรภ์/ก่อนคลอด',role:'retention',roleL:'Retention',price:500,qty:18,sum:9000,isHT:false,isRet:true,isEntry:false},
+ {raw:'DF-หัตถการ 1000 บาท',clean:'หัตถการ 1,000 (DF)',cat:'procedure',catL:'หัตถการ',role:'core',roleL:'Core',price:1000,qty:8,sum:8000,isHT:false,isRet:false,isEntry:false},
+ {raw:'Beta-hcg',clean:'Beta-HCG',cat:'consultation',catL:'ตรวจรักษา',role:'entry',roleL:'Entry',price:600,qty:13,sum:7800,isHT:false,isRet:false,isEntry:true},
+ {raw:'TCA จี้หูด',clean:'TCA จี้หูด',cat:'procedure',catL:'หัตถการ',role:'core',roleL:'Core',price:300,qty:25,sum:7500,isHT:false,isRet:false,isEntry:false},
+ {raw:'DF-ค่าบริการฉีดยา',clean:'บริการฉีดยา (DF)',cat:'procedure',catL:'หัตถการ',role:'entry',roleL:'Entry',price:150,qty:45,sum:6750,isHT:false,isRet:false,isEntry:true},
+ {raw:'DF-หัตถการ 500',clean:'หัตถการ 500 (DF)',cat:'procedure',catL:'หัตถการ',role:'core',roleL:'Core',price:500,qty:8,sum:4000,isHT:false,isRet:false,isEntry:false},
+ {raw:'STD HIV/SY/HbsAg/HBV',clean:'STD HIV/HBV Panel',cat:'preventive',catL:'ตรวจป้องกัน',role:'core',roleL:'Core',price:990,qty:4,sum:3960,isHT:false,isRet:false,isEntry:false},
+ {raw:'ใบรับรองแพทย์ 5 โรค',clean:'ใบรับรองแพทย์',cat:'admin',catL:'เอกสาร/อื่น ๆ',role:'entry',roleL:'Entry',price:200,qty:9,sum:1800,isHT:false,isRet:false,isEntry:true},
+ {raw:'VDRL',clean:'VDRL',cat:'consultation',catL:'ตรวจรักษา',role:'core',roleL:'Core',price:250,qty:4,sum:1000,isHT:false,isRet:false,isEntry:false}
+];
+
+const MONTHLY_TOP_SVC={
+ '2568-05':[{name:'ตรวจภายใน',qty:19},{name:'ใบรับรองแพทย์',qty:2}],
+ '2568-06':[{name:'ค่าตรวจรักษา',qty:58},{name:'ตรวจภายใน',qty:16},{name:'DF-หัตถการ 1000',qty:3}],
+ '2568-07':[{name:'ตรวจภายใน',qty:22},{name:'STD 12 profile',qty:8},{name:'TCA',qty:3}],
+ '2568-08':[{name:'ultrasound2D-transvagina',qty:49},{name:'ตรวจภายใน',qty:46},{name:'ultrasound2D-ANC follow up',qty:9}],
+ '2568-09':[{name:'ultrasound2D-transvagina',qty:65},{name:'ตรวจภายใน',qty:36},{name:'ultrasound2D-ANC follow up',qty:21}],
+ '2568-10':[{name:'ultrasound2D-transvagina',qty:48},{name:'ตรวจภายใน',qty:48},{name:'ultrasound2D-ANC follow up',qty:29}],
+ '2568-11':[{name:'ultrasound2D-transvagina',qty:48},{name:'ตรวจภายใน',qty:35},{name:'ultrasound2D-ANC follow up',qty:30}],
+ '2568-12':[{name:'ultrasound2D-transvagina',qty:55},{name:'ตรวจภายใน',qty:42},{name:'ultrasound2D-ANC follow up',qty:27}],
+ '2569-01':[{name:'ultrasound2D-transvagina',qty:66},{name:'ตรวจภายใน',qty:37},{name:'ultrasound2D-ANC follow up',qty:35}],
+ '2569-02':[{name:'ultrasound2D-transvagina',qty:59},{name:'ตรวจภายใน',qty:39},{name:'ultrasound2D-ANC follow up',qty:34}],
+ '2569-03':[{name:'ultrasound2D-transvagina',qty:64},{name:'ultrasound2D-ANC follow up',qty:56},{name:'ตรวจภายใน',qty:41}]
+};
+
+const FB_WEEKLY=[
+ {wk:'27ต.ค.-2พ.ย.',views:59382,viewers:12003},{wk:'3-9พ.ย.',views:84279,viewers:50133},{wk:'10-16พ.ย.',views:130295,viewers:99490},
+ {wk:'17-23พ.ย.',views:138807,viewers:95226},{wk:'24-30พ.ย.',views:135956,viewers:92585},{wk:'1-7ธ.ค.',views:155865,viewers:102027},
+ {wk:'8-14ธ.ค.',views:156251,viewers:101353},{wk:'15-21ธ.ค.',views:73148,viewers:40780},{wk:'22-28ธ.ค.',views:72543,viewers:34545},
+ {wk:'29ธ.ค.-4ม.ค.',views:76751,viewers:39600},{wk:'5-11ม.ค.',views:62531,viewers:27177},{wk:'12-18ม.ค.',views:161586,viewers:128993},
+ {wk:'19-25ม.ค.',views:291030,viewers:190998},{wk:'26ม.ค.-1ก.พ.',views:44533,viewers:22495},{wk:'2-8ก.พ.',views:22826,viewers:11234},
+ {wk:'9-15ก.พ.',views:40935,viewers:21063},{wk:'16-22ก.พ.',views:30873,viewers:15733},{wk:'23ก.พ.-1มี.ค.',views:74777,viewers:46560},
+ {wk:'2-8มี.ค.',views:166380,viewers:105177},{wk:'9-15มี.ค.',views:185555,viewers:118286},{wk:'16-22มี.ค.',views:167313,viewers:106832,messages:70}
+];
+const TT_WEEKLY=[
+ {wk:'27ต.ค.-2พ.ย.',views:61242},{wk:'3-9พ.ย.',views:102701},{wk:'10-16พ.ย.',views:77893},{wk:'17-23พ.ย.',views:81865},
+ {wk:'24-30พ.ย.',views:73431},{wk:'1-7ธ.ค.',views:126479},{wk:'8-14ธ.ค.',views:117879},{wk:'15-21ธ.ค.',views:130223},
+ {wk:'22-28ธ.ค.',views:101263},{wk:'29ธ.ค.-4ม.ค.',views:81591},{wk:'5-11ม.ค.',views:104678},{wk:'12-18ม.ค.',views:91537},
+ {wk:'19-25ม.ค.',views:78225},{wk:'26ม.ค.-1ก.พ.',views:122608},{wk:'2-8ก.พ.',views:67831},{wk:'9-15ก.พ.',views:53836}
+];
+const LINE_WEEKLY=[
+ {wk:'27ต.ค.-2พ.ย.',link:27,poster:5},{wk:'3-9พ.ย.',link:30,poster:6},{wk:'10-16พ.ย.',link:33,poster:17},
+ {wk:'17-23พ.ย.',link:26,poster:11},{wk:'24-30พ.ย.',link:30,poster:13},{wk:'1-7ธ.ค.',link:24,poster:9},
+ {wk:'8-14ธ.ค.',link:32,poster:8},{wk:'15-21ธ.ค.',link:56,poster:8},{wk:'22-28ธ.ค.',link:34,poster:9},
+ {wk:'29ธ.ค.-4ม.ค.',link:30,poster:7},{wk:'5-11ม.ค.',link:43,poster:14},{wk:'12-18ม.ค.',link:26,poster:10},
+ {wk:'19-25ม.ค.',link:29,poster:8},{wk:'26ม.ค.-1ก.พ.',link:33,poster:13}
+];
+
+// ============================================================
+// STATE & UTILS
+// ============================================================
+const state={range:'all',execTrend:'monthly',svcView:'revenue',svcRole:'all',svcSearch:'',svcSort:'sum-desc',svcSortDir:{key:'sum',dir:'desc'}};
+const C={cyan:'#22d3ee',green:'#34d399',orange:'#fb923c',purple:'#a78bfa',rose:'#f472b6',yellow:'#fbbf24',red:'#f87171',gray:'#475569',
+  cyanL:'rgba(34,211,238,.3)',greenL:'rgba(52,211,153,.3)',orangeL:'rgba(251,146,60,.3)',purpleL:'rgba(167,139,250,.3)'};
+const fmt=n=>new Intl.NumberFormat('en-US').format(Math.round(n));
+const fmtB=n=>'฿'+fmt(n);
+const pct=(a,b)=>b&&b!==0?((a-b)/b*100).toFixed(1):null;
+const charts={};
+
+function getFiltered(){
+  if(state.range==='all')return MS;
+  if(state.range==='6mo')return MS.slice(-6);
+  if(state.range==='3mo')return MS.slice(-3);
+  if(state.range==='2569')return MS.filter(m=>m.yr==='2569');
+  if(state.range==='2568')return MS.filter(m=>m.yr==='2568');
+  if(state.range.startsWith('m:'))return MS.filter(m=>m.ym===state.range.slice(2));
+  return MS;
 }
-function getSvcKey(svcName){
-  if(svcMonthlyMap[svcName])return svcName;
-  for(const key of Object.keys(svcMonthlyMap)){
-    if(key.length>=4&&svcName.includes(key))return key;
-    if(svcName.length>=4&&key.includes(svcName))return key;
+function mkGrad(ctx,color){const g=ctx.chart.ctx.createLinearGradient(0,0,0,360);g.addColorStop(0,color+'55');g.addColorStop(1,color+'08');return g;}
+function calcMoM(curr,prev){if(!prev||prev===0)return null;return((curr-prev)/prev*100);}
+function lastFullMonth(){return MS.filter(m=>!m.partial).slice(-1)[0];}
+function prevMonth(m){const idx=MS.findIndex(x=>x.ym===m.ym);return idx>0?MS[idx-1]:null;}
+
+// ============================================================
+// DATA WARNINGS
+// ============================================================
+function renderWarnings(){
+  const warns=[
+    {type:'error',icon:'❌',text:'ไม่มีข้อมูลรายจ่าย (Expense) — ทุกเดือน'},
+    {type:'warn',icon:'⚠️',text:'เม.ย. 69 ยังไม่ครบเดือน (ข้อมูล 20 วันทำการ)'},
+    {type:'warn',icon:'📊',text:'Social Data ไม่ครบทุกเดือน — ก่อน พ.ย. 68 ไม่มีข้อมูล'},
+    {type:'info',icon:'🔗',text:'ยังไม่มี Source Attribution — ไม่รู้ว่า Social Channel ไหนนำมาซึ่งคนไข้'},
+    {type:'info',icon:'🆔',text:'ไม่มี HN Tracking — Retention คำนวณจาก Aggregate เท่านั้น'},
+  ];
+  document.getElementById('warnPanel').innerHTML=warns.map(w=>
+    `<div class="warn-card ${w.type}"><span class="icon">${w.icon}</span>${w.text}</div>`
+  ).join('');
+}
+
+// ============================================================
+// TAB 1: EXECUTIVE COMMAND CENTER
+// ============================================================
+function renderExec(){
+  const data=getFiltered();
+  if(!data.length)return;
+  const totalRev=data.reduce((s,m)=>s+m.revenue,0);
+  const totalBills=data.reduce((s,m)=>s+m.bills,0);
+  const totalNew=data.reduce((s,m)=>s+m.newP,0);
+  const totalRep=data.reduce((s,m)=>s+m.repP,0);
+  const totalPat=totalNew+totalRep;
+  const avgBill=totalRev/totalBills;
+  const repRate=(totalRep/totalPat*100);
+  const revPat=totalRev/totalPat;
+  const last=lastFullMonth();
+  const prev=last?prevMonth(last):null;
+  const revMoM=last&&prev?calcMoM(last.revenue,prev.revenue):null;
+  const patMoM=last&&prev?calcMoM(last.bills,prev.bills):null;
+  const newMoM=last&&prev?calcMoM(last.newP,prev.newP):null;
+
+  function momBadge(val,label){
+    if(val===null)return`<span class="sub na">N/A — ไม่มีข้อมูลเพียงพอ</span>`;
+    const cls=val>=0?'up':'dn';const arrow=val>=0?'↑':'↓';
+    return`<span class="sub ${cls}">${arrow} ${Math.abs(val).toFixed(1)}% ${label}</span>`;
   }
-  return null;
+
+  document.getElementById('kpi-main').innerHTML=`
+    <div class="kpi blue"><div class="lbl">💰 รายได้รวม</div><div class="val">${fmtB(totalRev)}</div><span class="sub neu">${data[0].label} – ${data[data.length-1].label}</span></div>
+    <div class="kpi red"><div class="lbl">💹 Net Profit<span class="estimate-tag">ยังไม่มีข้อมูล</span></div><div class="val na-val">N/A</div><span class="sub warn">⚠️ ต้องการข้อมูล Expense</span></div>
+    <div class="kpi green"><div class="lbl">🧾 จำนวนบิล/Visit</div><div class="val">${fmt(totalBills)}</div><span class="sub neu">รวม ${data.length} เดือน</span></div>
+    <div class="kpi purple"><div class="lbl">👥 คนไข้รวม (Proxy)</div><div class="val">${fmt(totalPat)}</div><span class="sub neu">New + Repeat</span></div>`;
+
+  document.getElementById('kpi-rates').innerHTML=`
+    <div class="kpi orange"><div class="lbl">🆕 คนไข้ใหม่</div><div class="val">${fmt(totalNew)}</div><span class="sub neu">${(totalNew/totalPat*100).toFixed(1)}% ของทั้งหมด</span></div>
+    <div class="kpi blue"><div class="lbl">🔁 คนไข้กลับมา</div><div class="val">${fmt(totalRep)}</div><span class="sub ${repRate>=50?'up':'dn'}">${repRate.toFixed(1)}% Repeat Rate</span></div>
+    <div class="kpi green"><div class="lbl">💵 Average Bill<span class="estimate-tag">Revenue÷Bills</span></div><div class="val">${fmtB(avgBill)}</div><span class="sub neu">บาท / Visit</span></div>
+    <div class="kpi purple"><div class="lbl">⭐ Revenue / Patient<span class="estimate-tag">Proxy</span></div><div class="val">${fmtB(revPat)}</div><span class="sub neu">บาท / คน (Proxy)</span></div>`;
+
+  const lastLabel=last?`${last.label} vs ${prev?prev.label:''}`:'-';
+  document.getElementById('kpi-mom').innerHTML=`
+    <div class="kpi blue"><div class="lbl">📈 Revenue MoM <span style="font-size:10px;color:var(--dim)">(เดือนเต็มล่าสุด)</span></div>
+      <div class="val">${revMoM!==null?(Math.abs(revMoM).toFixed(1)+'%'):'N/A'}</div>${momBadge(revMoM,lastLabel)}</div>
+    <div class="kpi green"><div class="lbl">👥 Patient MoM</div>
+      <div class="val">${patMoM!==null?(Math.abs(patMoM).toFixed(1)+'%'):'N/A'}</div>${momBadge(patMoM,lastLabel)}</div>
+    <div class="kpi red"><div class="lbl">💹 Net Profit MoM</div>
+      <div class="val na-val">N/A</div><span class="sub warn">⚠️ ต้องการข้อมูล Expense</span></div>`;
+
+  // charts
+  renderExecRevChart();
+  renderExecPatChart();
+  document.getElementById('hdr-status').textContent=`ข้อมูล ${MS[0].label} – ${MS[MS.length-1].label} • ${totalBills.toLocaleString()} visits`;
 }
-function getActiveSvcMonths(){return svcFilterMonths||monthlyData.map(m=>m.ym);}
-function calcSvcGrowth(key){
-  if(!key||!svcMonthlyMap[key])return null;
-  const months=Object.keys(svcMonthlyMap[key]).sort();
-  if(months.length<2)return null;
-  const first=svcMonthlyMap[key][months[0]];
-  const last=svcMonthlyMap[key][months[months.length-1]];
-  return first>0?((last-first)/first*100):null;
+
+function renderExecRevChart(){
+  const data=getFiltered();
+  let vals=state.execTrend==='cumulative'?(()=>{let s=0;return data.map(m=>s+=m.revenue);})():data.map(m=>m.revenue);
+  const c=document.getElementById('execRevChart');if(!c)return;
+  if(charts.er)charts.er.destroy();
+  charts.er=new Chart(c,{type:'line',data:{labels:data.map(m=>m.label),datasets:[{label:state.execTrend==='cumulative'?'รายได้สะสม':'รายได้',data:vals,borderColor:C.cyan,backgroundColor:ctx=>mkGrad(ctx,C.cyan),fill:true,tension:.4,borderWidth:3,pointBackgroundColor:'#0b0d1e',pointBorderColor:C.cyan,pointRadius:data.map(m=>m.partial?0:5),pointBorderWidth:2,borderDash:data.map((_,i)=>data[i].partial?[6,3]:[]),segment:{borderDash:ctx=>data[ctx.p1DataIndex]?.partial?[6,3]:[]}}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>` ${fmtB(ctx.parsed.y)}${data[ctx.dataIndex]?.partial?' ⚠️ ไม่ครบเดือน':''}`}}},scales:{x:{grid:{color:'rgba(255,255,255,.04)'}},y:{beginAtZero:true,ticks:{callback:v=>fmt(v)},grid:{color:'rgba(255,255,255,.06)'}}}}});
 }
-function initSvcMonthly(){
-  buildSvcMonthlyMap();
-  renderSvcMonthFilter();
-  renderSvcAnalysisGrid();
-  const fab=document.getElementById('compareFab');
-  if(fab)fab.addEventListener('click',()=>document.getElementById('svcCompareWrap').scrollIntoView({behavior:'smooth',block:'start'}));
+
+function renderExecPatChart(){
+  const data=getFiltered();const c=document.getElementById('execPatChart');if(!c)return;
+  if(charts.ep)charts.ep.destroy();
+  charts.ep=new Chart(c,{type:'bar',data:{labels:data.map(m=>m.label+(m.partial?' ⚠️':'')),datasets:[{label:'คนไข้เก่า',data:data.map(m=>m.repP),backgroundColor:C.cyanL,borderRadius:4},{label:'คนไข้ใหม่',data:data.map(m=>m.newP),backgroundColor:C.orange,borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',align:'end'}},scales:{x:{stacked:true,grid:{color:'rgba(255,255,255,.04)'}},y:{stacked:true,beginAtZero:true,grid:{color:'rgba(255,255,255,.06)'}}}}});
 }
-function setSvcView(mode,btn){
-  svcViewMode=mode;
-  document.querySelectorAll('#svcTabAll,#svcTabTracked').forEach(b=>b.classList.remove('active'));
-  btn.classList.add('active');
-  svcExpandedIdx=null;
-  renderSvcAnalysisGrid();
+
+// ============================================================
+// TAB 2: MONTHLY TREND
+// ============================================================
+function renderTrend(){
+  const data=getFiltered();
+  const metric=state.trendMetric||'revenue';
+  const metricMap={
+    revenue:{key:'revenue',label:'รายได้',color:C.cyan,fmt:fmtB,type:'line'},
+    bills:{key:'bills',label:'จำนวน Visit',color:C.green,fmt:v=>fmt(v)+' ครั้ง',type:'bar'},
+    patients:{key:'uPat',label:'คนไข้',color:C.purple,fmt:v=>fmt(v)+' ราย',type:'line'},
+    avgbill:{key:null,label:'Average Bill',color:C.orange,fmt:fmtB,type:'line'}
+  };
+  const m=metricMap[metric];
+  const vals=metric==='avgbill'?data.map(d=>d.revenue/d.bills):data.map(d=>d[m.key]);
+  const c1=document.getElementById('trendMainChart');if(!c1)return;
+  if(charts.tm)charts.tm.destroy();
+  charts.tm=new Chart(c1,{type:m.type,data:{labels:data.map(d=>d.label+(d.partial?' ⚠️':'')),datasets:[{label:m.label,data:vals,borderColor:m.color,backgroundColor:m.type==='line'?ctx=>mkGrad(ctx,m.color):vals.map((_,i)=>data[i].partial?m.color+'44':m.color+'aa'),fill:m.type==='line',tension:.4,borderWidth:3,borderRadius:m.type==='bar'?6:0,pointBackgroundColor:'#0b0d1e',pointBorderColor:m.color,pointRadius:m.type==='line'?5:0,segment:{borderDash:ctx=>data[ctx.p1DataIndex]?.partial?[6,3]:[]}}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>` ${m.fmt(ctx.parsed.y)}${data[ctx.dataIndex]?.partial?' (ไม่ครบเดือน)':''}`}}},scales:{x:{grid:{color:'rgba(255,255,255,.04)'}},y:{beginAtZero:true,ticks:{callback:v=>fmt(v)},grid:{color:'rgba(255,255,255,.06)'}}}}});
+
+  // New vs Repeat
+  const c2=document.getElementById('trendNRChart');if(charts.tnr)charts.tnr.destroy();
+  charts.tnr=new Chart(c2,{type:'bar',data:{labels:data.map(d=>d.label),datasets:[{label:'ใหม่',data:data.map(d=>d.newP),backgroundColor:C.orange,borderRadius:4},{label:'กลับมา',data:data.map(d=>d.repP),backgroundColor:C.cyanL,borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',align:'end'}},scales:{x:{stacked:true,grid:{color:'rgba(255,255,255,.04)'}},y:{stacked:true,beginAtZero:true,grid:{color:'rgba(255,255,255,.06)'}}}}});
+
+  // Growth
+  const c3=document.getElementById('trendGrowthChart');if(charts.tg)charts.tg.destroy();
+  const growth=data.map((m,i)=>i===0?null:pct(m.revenue,data[i-1].revenue));
+  charts.tg=new Chart(c3,{type:'bar',data:{labels:data.map(d=>d.label),datasets:[{label:'Revenue MoM %',data:growth,backgroundColor:growth.map(v=>v===null?C.gray+'44':v>=0?C.green+'aa':C.red+'aa'),borderRadius:6}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>ctx.parsed.y===null?' N/A (เดือนแรก)':` ${ctx.parsed.y}%`}}},scales:{x:{grid:{color:'rgba(255,255,255,.04)'}},y:{ticks:{callback:v=>v+'%'},grid:{color:'rgba(255,255,255,.06)'}}}}});
+
+  // Avg Bill
+  const c4=document.getElementById('trendAvgBillChart');if(charts.tab)charts.tab.destroy();
+  charts.tab=new Chart(c4,{type:'line',data:{labels:data.map(d=>d.label),datasets:[{label:'Average Bill',data:data.map(d=>d.revenue/d.bills),borderColor:C.orange,backgroundColor:ctx=>mkGrad(ctx,C.orange),fill:true,tension:.4,borderWidth:2.5,pointBackgroundColor:'#0b0d1e',pointBorderColor:C.orange,pointRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>` ${fmtB(ctx.parsed.y)}`}}},scales:{x:{grid:{color:'rgba(255,255,255,.04)'}},y:{beginAtZero:false,ticks:{callback:v=>fmt(v)},grid:{color:'rgba(255,255,255,.06)'}}}}});
+
+  // Social Monthly
+  const c5=document.getElementById('trendSocialChart');if(charts.ts)charts.ts.destroy();
+  const socData=MS.filter(m=>m.fbViews||m.ttViews);
+  charts.ts=new Chart(c5,{type:'bar',data:{labels:socData.map(m=>m.label),datasets:[{label:'FB Views (ประมาณ)',data:socData.map(m=>m.fbViews||0),backgroundColor:C.cyanL,borderRadius:4},{label:'TT Views (ประมาณ)',data:socData.map(m=>m.ttViews||0),backgroundColor:C.purpleL,borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',align:'end'}},scales:{x:{grid:{color:'rgba(255,255,255,.04)'}},y:{beginAtZero:true,ticks:{callback:v=>fmt(v)},grid:{color:'rgba(255,255,255,.06)'}}}}});
 }
-function renderSvcMonthFilter(){
-  const el=document.getElementById('svcMonthFilter');
-  if(!el)return;
-  el.innerHTML='<span class="filter-label" style="font-size:11px;margin-right:4px">📅 กรองเดือน:</span>'+
-    `<button class="month-chip ${!svcFilterMonths?'active':''}" onclick="toggleSvcMonth('all')">ทั้งหมด</button>`+
-    monthlyData.map(m=>{
-      const active=svcFilterMonths&&svcFilterMonths.includes(m.ym);
-      return `<button class="month-chip ${active?'active':''}" onclick="toggleSvcMonth('${m.ym}')">${m.label}</button>`;
-    }).join('');
+
+// ============================================================
+// TAB 3: SERVICE PERFORMANCE
+// ============================================================
+function renderService(){
+  renderSvcTopChart();
+  renderSvcCatCharts();
+  renderSvcTable();
+  renderSvcMomChart();
 }
-function toggleSvcMonth(ym){
-  if(ym==='all'){svcFilterMonths=null;}
-  else{
-    if(!svcFilterMonths)svcFilterMonths=[];
-    const idx=svcFilterMonths.indexOf(ym);
-    if(idx>=0){svcFilterMonths.splice(idx,1);if(!svcFilterMonths.length)svcFilterMonths=null;}
-    else svcFilterMonths.push(ym);
+
+function getFilteredSvc(){
+  let svcs=[...SVC];
+  const role=state.svcRole;
+  if(role==='entry')svcs=svcs.filter(s=>s.isEntry);
+  else if(role==='retention')svcs=svcs.filter(s=>s.isRet);
+  else if(role==='high_ticket')svcs=svcs.filter(s=>s.isHT);
+  else if(role==='core')svcs=svcs.filter(s=>!s.isHT&&!s.isRet&&!s.isEntry);
+  const q=state.svcSearch.toLowerCase().trim();
+  if(q)svcs=svcs.filter(s=>s.clean.toLowerCase().includes(q)||s.raw.toLowerCase().includes(q)||s.catL.includes(q));
+  const[key,dir]=state.svcSort.split('-');
+  svcs.sort((a,b)=>{const av=a[key==='sum'?'sum':key==='qty'?'qty':'price'],bv=b[key==='sum'?'sum':key==='qty'?'qty':'price'];return dir==='desc'?bv-av:av-bv;});
+  return svcs;
+}
+
+function renderSvcTopChart(){
+  const view=state.svcView;
+  const top10=[...SVC].sort((a,b)=>view==='revenue'?b.sum-a.sum:view==='volume'?b.qty-a.qty:b.price-a.price).slice(0,10);
+  const c=document.getElementById('svcTopChart');if(!c)return;
+  if(charts.st)charts.st.destroy();
+  const val=view==='revenue'?s=>s.sum:view==='volume'?s=>s.qty:s=>s.price;
+  const lbl=view==='revenue'?'รายได้':view==='volume'?'จำนวนครั้ง':'ราคา/ครั้ง';
+  charts.st=new Chart(c,{type:'bar',data:{labels:top10.map(s=>s.clean),datasets:[{label:lbl,data:top10.map(val),backgroundColor:top10.map((_,i)=>[C.cyan,C.green,C.orange,C.purple,C.rose][i%5]+'bb'),borderRadius:6,borderSkipped:false}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>` ${view==='revenue'?fmtB(ctx.parsed.x):fmt(ctx.parsed.x)+(view==='volume'?' ครั้ง':' ฿/ครั้ง')}`}}},scales:{x:{beginAtZero:true,ticks:{callback:v=>fmt(v)},grid:{color:'rgba(255,255,255,.06)'}},y:{grid:{display:false}}}}});
+}
+
+function renderSvcCatCharts(){
+  const cats={};SVC.forEach(s=>{if(!cats[s.catL])cats[s.catL]={rev:0,qty:0};cats[s.catL].rev+=s.sum;cats[s.catL].qty+=s.qty;});
+  const labels=Object.keys(cats);const revs=labels.map(k=>cats[k].rev);const qtys=labels.map(k=>cats[k].qty);
+  const catColors=[C.cyan,C.green,C.orange,C.purple,C.rose,C.yellow,C.gray];
+  const c1=document.getElementById('svcCatRevChart');if(!c1)return;
+  if(charts.scr)charts.scr.destroy();
+  charts.scr=new Chart(c1,{type:'doughnut',data:{labels,datasets:[{data:revs,backgroundColor:catColors.map(c=>c+'cc'),borderWidth:3,borderColor:'#0b0d1e'}]},options:{responsive:true,maintainAspectRatio:false,cutout:'60%',plugins:{legend:{position:'right',labels:{boxWidth:12,padding:10,font:{size:11}}},tooltip:{callbacks:{label:ctx=>` ${fmtB(ctx.parsed)} (${(ctx.parsed/revs.reduce((a,b)=>a+b)*100).toFixed(1)}%)`}}}}});
+  const c2=document.getElementById('svcCatVolChart');if(!c2)return;
+  if(charts.scv)charts.scv.destroy();
+  charts.scv=new Chart(c2,{type:'doughnut',data:{labels,datasets:[{data:qtys,backgroundColor:catColors.map(c=>c+'cc'),borderWidth:3,borderColor:'#0b0d1e'}]},options:{responsive:true,maintainAspectRatio:false,cutout:'60%',plugins:{legend:{position:'right',labels:{boxWidth:12,padding:10,font:{size:11}}},tooltip:{callbacks:{label:ctx=>` ${fmt(ctx.parsed)} ครั้ง`}}}}});
+}
+
+function renderSvcTable(){
+  const svcs=getFilteredSvc();
+  const tbody=document.getElementById('svcBody');if(!tbody)return;
+  if(!svcs.length){tbody.innerHTML='<tr class="empty-r"><td colspan="7">ไม่พบรายการ</td></tr>';return;}
+  const maxSum=Math.max(...svcs.map(s=>s.sum));
+  tbody.innerHTML=svcs.map((s,i)=>{
+    const pct_=(s.sum/maxSum*100).toFixed(0);
+    return`<tr><td><span class="rank">${i+1}</span></td>
+      <td><div style="font-weight:600;color:var(--text)">${s.clean}</div><div style="font-size:10px;color:var(--dim)">${s.raw}</div></td>
+      <td><span class="cat-badge cat-${s.cat}">${s.catL}</span></td>
+      <td><span class="role-badge role-${s.role}">${s.roleL}</span></td>
+      <td class="r">${fmt(s.price)}</td>
+      <td class="r">${fmt(s.qty)}</td>
+      <td class="r bar-cell" style="--w:${pct_}%"><strong>${fmt(s.sum)}</strong></td></tr>`;
+  }).join('');
+}
+
+function renderSvcMomChart(){
+  const tracked=['ultrasound2D-transvagina','ตรวจภายใน','ultrasound2D-ANC follow up'];
+  const months=Object.keys(MONTHLY_TOP_SVC).sort();
+  const labels=months.map(ym=>MS.find(m=>m.ym===ym)?.label||ym);
+  const colors=[C.cyan,C.green,C.orange];
+  const datasets=tracked.map((name,i)=>({
+    label:SVC.find(s=>s.raw===name||s.raw.includes(name)||name.includes(s.raw))?.clean||name,
+    data:months.map(ym=>{const d=MONTHLY_TOP_SVC[ym];return d?(d.find(s=>s.name===name||s.name.includes(name.split('2D-')[1]||name))?.qty||0):0;}),
+    borderColor:colors[i],backgroundColor:colors[i]+'20',tension:.4,fill:false,pointBackgroundColor:'#0b0d1e',pointBorderColor:colors[i],pointRadius:4,borderWidth:2.5
+  }));
+  const c=document.getElementById('svcMomChart');if(!c)return;
+  if(charts.smom)charts.smom.destroy();
+  charts.smom=new Chart(c,{type:'line',data:{labels,datasets},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',align:'start'}},scales:{x:{grid:{color:'rgba(255,255,255,.04)'}},y:{beginAtZero:true,grid:{color:'rgba(255,255,255,.06)'}}}}});
+}
+
+// ============================================================
+// TAB 4: PATIENT RETENTION
+// ============================================================
+function renderRetention(){
+  const data=getFiltered();
+  const totalNew=data.reduce((s,m)=>s+m.newP,0);
+  const totalRep=data.reduce((s,m)=>s+m.repP,0);
+  const totalPat=totalNew+totalRep;
+  const totalRev=data.reduce((s,m)=>s+m.revenue,0);
+  const repRate=(totalRep/totalPat*100);
+  const revPerPat=totalRev/totalPat;
+  const last=lastFullMonth();const prev=last?prevMonth(last):null;
+  const repMoM=last&&prev?calcMoM(last.repP/last.bills*100,prev.repP/prev.bills*100):null;
+
+  document.getElementById('kpi-ret').innerHTML=`
+    <div class="kpi blue"><div class="lbl">🔁 Repeat Rate รวม</div><div class="val">${repRate.toFixed(1)}%</div><span class="sub ${repRate>=50?'up':'dn'}">${repRate>=50?'👍 เกินครึ่ง':'⚠️ ต่ำกว่าครึ่ง'}</span></div>
+    <div class="kpi green"><div class="lbl">⭐ Revenue / Patient<span class="estimate-tag">Proxy</span></div><div class="val">${fmtB(revPerPat)}</div><span class="sub neu">บาท / คน (ช่วงที่เลือก)</span></div>
+    <div class="kpi orange"><div class="lbl">📈 Repeat Rate เดือนล่าสุด</div><div class="val">${last?(last.repP/last.bills*100).toFixed(1)+'%':'—'}</div>
+      ${repMoM!==null?`<span class="sub ${repMoM>=0?'up':'dn'}">${repMoM>=0?'↑':'↓'} ${Math.abs(repMoM).toFixed(1)} pp vs ${prev?.label}</span>`:`<span class="sub na">N/A</span>`}</div>
+    <div class="kpi purple"><div class="lbl">👥 คนไข้ใหม่ รวม</div><div class="val">${fmt(totalNew)}</div><span class="sub neu">${(totalNew/totalPat*100).toFixed(1)}% ของทั้งหมด</span></div>`;
+
+  const c1=document.getElementById('retNRChart');if(charts.rn)charts.rn.destroy();
+  charts.rn=new Chart(c1,{type:'bar',data:{labels:data.map(m=>m.label),datasets:[{label:'คนไข้ใหม่',data:data.map(m=>m.newP),backgroundColor:C.orange+'bb',borderRadius:4},{label:'กลับมา',data:data.map(m=>m.repP),backgroundColor:C.cyanL,borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',align:'end'}},scales:{x:{stacked:true,grid:{color:'rgba(255,255,255,.04)'}},y:{stacked:true,beginAtZero:true,grid:{color:'rgba(255,255,255,.06)'}}}}});
+
+  const c2=document.getElementById('retShareChart');if(charts.rs)charts.rs.destroy();
+  charts.rs=new Chart(c2,{type:'line',data:{labels:data.map(m=>m.label),datasets:[{label:'Repeat Rate %',data:data.map(m=>(m.repP/m.bills*100).toFixed(1)),borderColor:C.cyan,backgroundColor:ctx=>mkGrad(ctx,C.cyan),fill:true,tension:.4,borderWidth:3,pointBackgroundColor:'#0b0d1e',pointBorderColor:C.cyan,pointRadius:5}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>` Repeat Rate: ${ctx.parsed.y}%`}}},scales:{x:{grid:{color:'rgba(255,255,255,.04)'}},y:{beginAtZero:false,ticks:{callback:v=>v+'%'},grid:{color:'rgba(255,255,255,.06)'}}}}});
+
+  const c3=document.getElementById('retRevPatChart');if(charts.rp)charts.rp.destroy();
+  charts.rp=new Chart(c3,{type:'line',data:{labels:data.map(m=>m.label),datasets:[{label:'Revenue / Patient',data:data.map(m=>m.revenue/m.bills),borderColor:C.green,backgroundColor:ctx=>mkGrad(ctx,C.green),fill:true,tension:.4,borderWidth:3,pointBackgroundColor:'#0b0d1e',pointBorderColor:C.green,pointRadius:5}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>` ${fmtB(ctx.parsed.y)} / คน`}}},scales:{x:{grid:{color:'rgba(255,255,255,.04)'}},y:{beginAtZero:false,ticks:{callback:v=>fmt(v)},grid:{color:'rgba(255,255,255,.06)'}}}}});
+
+  const c4=document.getElementById('retNewTrendChart');if(charts.rnt)charts.rnt.destroy();
+  charts.rnt=new Chart(c4,{type:'line',data:{labels:data.map(m=>m.label),datasets:[{label:'คนไข้ใหม่',data:data.map(m=>m.newP),borderColor:C.orange,backgroundColor:ctx=>mkGrad(ctx,C.orange),fill:true,tension:.4,borderWidth:3,pointBackgroundColor:'#0b0d1e',pointBorderColor:C.orange,pointRadius:5}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{color:'rgba(255,255,255,.04)'}},y:{beginAtZero:true,grid:{color:'rgba(255,255,255,.06)'}}}}});
+
+  const retSvcs=SVC.filter(s=>s.isRet).sort((a,b)=>b.qty-a.qty);
+  document.getElementById('retSvcList').innerHTML=`<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px">`+
+    retSvcs.map(s=>`<div class="section" style="padding:14px;margin:0">
+      <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:6px">${s.clean}</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+        <span class="cat-badge cat-${s.cat}">${s.catL}</span>
+        <span class="role-badge role-retention">🔄 Retention</span>
+        <span style="font-size:11px;color:var(--dim)">${fmt(s.qty)} ครั้ง • ${fmtB(s.sum)}</span>
+      </div></div>`).join('')+'</div>';
+
+  document.getElementById('retLimits').innerHTML=`
+    <div class="insight r"><h3>❌ ยังไม่มี HN-level Tracking</h3><p>ข้อมูล New/Repeat คนไข้ปัจจุบันเป็น <strong>Aggregate per Month</strong> ไม่ใช่ Patient-level — ไม่สามารถคำนวณ Cohort Retention, LTV, Visit Frequency ที่แม่นยำได้</p></div>
+    <div class="insight r"><h3>❌ ไม่มี Cohort Table</h3><p>ต้องมีข้อมูล HN hash + First Visit Date + Visit History ระดับ row จึงจะทำ Cohort Analysis ได้</p></div>
+    <div class="insight"><h3>💡 ข้อมูลที่ต้องเพิ่ม</h3><p>patientIdHash (HN hash) • firstVisitDate • visitDate per row • serviceUsed per visit → จะทำให้คำนวณ LTV, Retention Curve, Cohort Table ได้</p></div>`;
+}
+
+// ============================================================
+// TAB 5: SOCIAL EFFICIENCY
+// ============================================================
+function renderSocial(){
+  const last=FB_WEEKLY[FB_WEEKLY.length-1];
+  const ttLast=TT_WEEKLY[TT_WEEKLY.length-1];
+  const lineLast=LINE_WEEKLY[LINE_WEEKLY.length-1];
+  document.getElementById('fbLastViews').textContent=fmt(last.views);
+  document.getElementById('fbLastViewers').textContent=fmt(last.viewers);
+  document.getElementById('fbLastMsg').innerHTML=last.messages?fmt(last.messages):'<span class="na-val">ไม่มีข้อมูลส่วนใหญ่</span>';
+  if(last.messages){
+    const rate=(last.messages/last.views*100).toFixed(3);
+    const per10k=(last.messages/last.views*10000).toFixed(1);
+    document.getElementById('fbMsgRate').textContent=rate+'%';
+    document.getElementById('fbMsg10k').textContent=per10k+' msg / 10K views';
+  }else{
+    document.getElementById('fbMsgRate').innerHTML='<span class="na-val">ไม่มีข้อมูล</span>';
+    document.getElementById('fbMsg10k').innerHTML='<span class="na-val">ไม่มีข้อมูล</span>';
   }
-  renderSvcMonthFilter();
-  renderSvcAnalysisGrid();
-  if(svcCompareSet.size>=2)renderSvcCompareChart();
-}
-function getActiveSvcs(){return svcViewMode==='tracked'?allServices.filter(s=>getSvcKey(s.name)):allServices;}
-function renderSvcAnalysisGrid(){
-  const grid=document.getElementById('svcAnalysisGrid');
-  if(!grid)return;
-  const displayMonths=getActiveSvcMonths();
-  const svcs=getActiveSvcs();
-  grid.innerHTML=svcs.map((svc,idx)=>{
-    const key=getSvcKey(svc.name);
-    const hasData=!!key;
-    const monthMap=hasData?svcMonthlyMap[key]:{};
-    const growth=calcSvcGrowth(key);
-    const vals=displayMonths.map(ym=>monthMap[ym]||0);
-    const maxVal=Math.max(...vals,1);
-    const isExpanded=svcExpandedIdx===idx;
-    const isCompared=svcCompareSet.has(idx);
-    const colorArr=[COLORS.primary,COLORS.green,COLORS.orange,COLORS.purple,COLORS.rose];
-    const growthBadge=growth!==null?`<span class="growth-badge ${growth>0?'up':'down'}">${growth>0?'↑':'↓'}${Math.abs(growth).toFixed(0)}%</span>`:'';
-    const miniBars=hasData
-      ?`<div class="mini-bar-chart" onclick="toggleSvcExpand(${idx},event)">
-          ${displayMonths.map(ym=>{const v=monthMap[ym]||0;const h=Math.max(v/maxVal*100,v>0?10:3);
-            return `<div class="mini-bar ${v>0?'has-v':''}" style="height:${h}%" title="${monthlyData.find(m=>m.ym===ym)?.label||ym}: ${v} ครั้ง"></div>`;}).join('')}
-        </div>
-        <div class="mini-hint">📊 ${Object.keys(monthMap).length} เดือน • คลิกดูรายละเอียด</div>`
-      :`<div class="no-monthly-msg">ไม่มีข้อมูลรายเดือน</div>`;
-    const detail=hasData?renderSvcDetailHTML(idx,key,displayMonths,monthMap):'';
-    return `<div class="svc-m-card${isExpanded?' expanded':''}${isCompared?' compared':''}" data-idx="${idx}">
-      <div class="svc-m-name-row">
-        <div class="svc-m-name" title="${svc.name}">${svc.name}</div>
-        <div style="display:flex;gap:5px;align-items:center;flex-shrink:0">
-          ${growthBadge}
-          <label style="cursor:pointer;display:flex;align-items:center" title="เปรียบเทียบ">
-            <input type="checkbox" ${isCompared?'checked':''} onchange="toggleSvcCompare(${idx},this.checked)" style="accent-color:#818cf8;width:15px;height:15px;cursor:pointer">
-          </label>
-        </div>
-      </div>
-      <div class="svc-m-stats">
-        <span>📌 ฿${fmt(svc.price)}/ครั้ง</span>
-        <span>💊 ${fmt(svc.qty)} ครั้ง</span>
-        <span>💰 ฿${fmt(svc.sum)}</span>
-      </div>
-      ${miniBars}
-      <div class="svc-m-detail ${isExpanded?'open':''}" id="svc-detail-${idx}">${detail}</div>
+  document.getElementById('ttLastViews').textContent=fmt(ttLast.views);
+  const ll=LINE_WEEKLY[LINE_WEEKLY.length-1];
+  document.getElementById('lineLastFriends').textContent=fmt(ll.link+ll.poster);
+  document.getElementById('lineLastLink').textContent=fmt(ll.link);
+  document.getElementById('lineLastPoster').textContent=fmt(ll.poster);
+
+  const cf=document.getElementById('fbChart');if(!cf)return;
+  if(charts.fb)charts.fb.destroy();
+  charts.fb=new Chart(cf,{type:'line',data:{labels:FB_WEEKLY.map(w=>w.wk),datasets:[{label:'ยอดดู',data:FB_WEEKLY.map(w=>w.views),borderColor:C.cyan,backgroundColor:ctx=>mkGrad(ctx,C.cyan),fill:true,tension:.35,borderWidth:2.5,pointRadius:3},{label:'ผู้ชม',data:FB_WEEKLY.map(w=>w.viewers),borderColor:C.orange,backgroundColor:'transparent',tension:.35,borderWidth:2.5,pointRadius:3}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',align:'end'}},scales:{x:{grid:{color:'rgba(255,255,255,.04)'},ticks:{maxRotation:55,autoSkip:true,maxTicksLimit:12}},y:{beginAtZero:true,ticks:{callback:v=>fmt(v)},grid:{color:'rgba(255,255,255,.06)'}}}}});
+
+  const ct=document.getElementById('ttChart');if(charts.tt)charts.tt.destroy();
+  charts.tt=new Chart(ct,{type:'bar',data:{labels:TT_WEEKLY.map(w=>w.wk),datasets:[{label:'ยอดชม',data:TT_WEEKLY.map(w=>w.views),backgroundColor:C.purpleL,borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{color:'rgba(255,255,255,.04)'},ticks:{maxRotation:55,autoSkip:true,maxTicksLimit:12}},y:{beginAtZero:true,ticks:{callback:v=>fmt(v)},grid:{color:'rgba(255,255,255,.06)'}}}}});
+
+  const cl=document.getElementById('lineChart');if(charts.line)charts.line.destroy();
+  charts.line=new Chart(cl,{type:'bar',data:{labels:LINE_WEEKLY.map(w=>w.wk),datasets:[{label:'จากลิงก์',data:LINE_WEEKLY.map(w=>w.link),backgroundColor:C.green+'bb',borderRadius:4},{label:'จากโปสเตอร์',data:LINE_WEEKLY.map(w=>w.poster),backgroundColor:C.greenL,borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',align:'end'}},scales:{x:{stacked:true,grid:{color:'rgba(255,255,255,.04)'},ticks:{maxRotation:55,autoSkip:true}},y:{stacked:true,beginAtZero:true,grid:{color:'rgba(255,255,255,.06)'}}}}});
+
+  const socMonths=MS.filter(m=>m.fbViews||m.ttViews||m.lineF);
+  const csm=document.getElementById('socialMonthlyChart');if(charts.sm)charts.sm.destroy();
+  charts.sm=new Chart(csm,{type:'bar',data:{labels:socMonths.map(m=>m.label),datasets:[{label:'FB Views (est.)',data:socMonths.map(m=>m.fbViews||0),backgroundColor:C.cyanL,borderRadius:4},{label:'TT Views (est.)',data:socMonths.map(m=>m.ttViews||0),backgroundColor:C.purpleL,borderRadius:4},{label:'LINE Friends (×1K)',data:socMonths.map(m=>(m.lineF||0)*1000),backgroundColor:C.greenL,borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',align:'end'}},scales:{x:{grid:{color:'rgba(255,255,255,.04)'}},y:{beginAtZero:true,ticks:{callback:v=>fmt(v)},grid:{color:'rgba(255,255,255,.06)'}}}}});
+
+  document.getElementById('socialNeeds').innerHTML=`
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px">
+      <div class="data-need"><h4>📊 ข้อมูล Social ที่ยังขาด</h4><ul><li>Facebook Messages รายสัปดาห์/เดือน</li><li>TikTok Messages/Leads</li><li>LINE Broadcast Performance</li><li>Comment Sentiment</li></ul></div>
+      <div class="data-need"><h4>🔗 ข้อมูล Attribution ที่ต้องการ</h4><ul><li>UTM Parameter ใน booking link</li><li>Source Channel per Patient</li><li>Campaign Name per Lead</li><li>Ad Spend per Campaign</li></ul></div>
+      <div class="data-need"><h4>💰 ข้อมูลที่ต้องการสำหรับ ROAS</h4><ul><li>Marketing Spend รายเดือน/แคมเปญ</li><li>Revenue per Source</li><li>Show-up Rate per Channel</li><li>First Service per Source</li></ul></div>
     </div>`;
-  }).join('');
-  if(svcExpandedIdx!==null){
-    const svc=svcs[svcExpandedIdx];
-    if(svc){const key=getSvcKey(svc.name);if(key)renderSvcBarChart(svcExpandedIdx,key,displayMonths);}
-  }
 }
-function renderSvcDetailHTML(idx,key,displayMonths,monthMap){
-  const activeRows=displayMonths.filter(ym=>monthMap[ym]>0);
-  const rows=activeRows.map((ym,i,arr)=>{
-    const qty=monthMap[ym];
-    const prev=i>0?monthMap[arr[i-1]]||0:null;
-    const delta=prev!==null&&prev>0?((qty-prev)/prev*100):null;
-    const lbl=monthlyData.find(m=>m.ym===ym)?.label||ym;
-    const totalPat=monthlyData.find(m=>m.ym===ym)?.total||'—';
-    return `<tr><td><strong style="color:#e2e8f0">${lbl}</strong></td>
-      <td class="right"><strong style="color:#22d3ee">${qty}</strong></td>
-      <td class="right">${delta!==null?`<span style="color:${delta>=0?'#34d399':'#f87171'};font-weight:600">${delta>=0?'+':''}${delta.toFixed(1)}%</span>`:'—'}</td>
-      <td class="right" style="color:#64748b">${totalPat}</td></tr>`;
-  }).join('');
-  return `<div class="chart-container" style="height:180px;margin-bottom:12px"><canvas id="svc-chart-${idx}"></canvas></div>
-    <table class="svc-monthly-tbl">
-      <thead><tr><th>เดือน</th><th class="right">จำนวน (ครั้ง)</th><th class="right">เทียบเดือนก่อน</th><th class="right">คนไข้รวมคลินิก</th></tr></thead>
-      <tbody>${rows||'<tr><td colspan="4" style="text-align:center;padding:14px;color:#475569">ไม่มีข้อมูล</td></tr>'}</tbody>
-    </table>`;
+
+// ============================================================
+// TAB 6: PROFIT & EXPENSE
+// ============================================================
+function renderProfit(){
+  const data=getFiltered();
+  const totalRev=data.reduce((s,m)=>s+m.revenue,0);
+  document.getElementById('kpi-profit').innerHTML=`
+    <div class="kpi blue"><div class="lbl">💰 Revenue รวม</div><div class="val">${fmtB(totalRev)}</div><span class="sub neu">${data.length} เดือน</span></div>
+    <div class="kpi muted"><div class="lbl">💸 Expense รวม</div><div class="val na-val">N/A</div><span class="sub warn">⚠️ ยังไม่มีข้อมูล</span></div>
+    <div class="kpi muted"><div class="lbl">💹 Net Profit</div><div class="val na-val">N/A</div><span class="sub warn">⚠️ Revenue − Expense</span></div>
+    <div class="kpi muted"><div class="lbl">📊 Net Margin</div><div class="val na-val">N/A</div><span class="sub warn">⚠️ Profit ÷ Revenue</span></div>`;
+
+  const cp=document.getElementById('profitRevChart');if(!cp)return;
+  if(charts.pr)charts.pr.destroy();
+  charts.pr=new Chart(cp,{type:'bar',data:{labels:data.map(m=>m.label+(m.partial?' ⚠️':'')),datasets:[{label:'Revenue',data:data.map(m=>m.revenue),backgroundColor:data.map(m=>m.partial?C.cyan+'44':C.cyan+'bb'),borderRadius:6}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>` ${fmtB(ctx.parsed.y)}${data[ctx.dataIndex]?.partial?' (ไม่ครบเดือน)':''}`}}},scales:{x:{grid:{color:'rgba(255,255,255,.04)'}},y:{beginAtZero:true,ticks:{callback:v=>fmt(v)},grid:{color:'rgba(255,255,255,.06)'}}}}});
+
+  document.getElementById('cannotCalc').innerHTML=`
+    <div class="insight r"><h3>❌ Net Profit / Net Margin</h3><p>ต้องการ: ค่าเช่า, เงินเดือน, ต้นทุนยา, ค่า Lab, ค่าใช้จ่ายทั่วไป รายเดือน</p></div>
+    <div class="insight r"><h3>❌ Break-even Analysis</h3><p>ต้องการ: Fixed Cost ต่อเดือน + Variable Cost per Patient → คำนวณ Break-even Patients ได้</p></div>
+    <div class="insight r"><h3>❌ ROAS (Return on Ad Spend)</h3><p>ต้องการ: Marketing Spend per Campaign + Revenue Attribution per Source — ห้ามคำนวณจาก Views โดยตรง</p></div>
+    <div class="insight r"><h3>❌ CAC (Customer Acquisition Cost)</h3><p>ต้องการ: Marketing Spend ÷ New Patients ที่มาจาก Marketing (ไม่ใช่ New Patients ทั้งหมด)</p></div>
+    <div class="insight r"><h3>❌ LTV (Lifetime Value)</h3><p>ต้องการ: HN-level visit history → คำนวณ Avg Revenue per Patient × Avg Retention Period</p></div>
+    <div class="insight"><h3>✅ สิ่งที่คำนวณได้แล้ว</h3><p>Revenue MoM Growth • Average Bill (Proxy) • Repeat Rate (Aggregate) • Revenue per Visit • New Patient Growth Rate • Service Category Mix • Service Volume Trend</p></div>`;
 }
-function renderSvcBarChart(idx,key,displayMonths){
-  const canvas=document.getElementById('svc-chart-'+idx);
-  if(!canvas)return;
-  const mm=svcMonthlyMap[key];
-  const data=displayMonths.map(ym=>mm[ym]||0);
-  const labels=displayMonths.map(ym=>monthlyData.find(m=>m.ym===ym)?.label||ym);
-  const ckey='svcBar_'+idx;
-  if(charts[ckey])charts[ckey].destroy();
-  charts[ckey]=new Chart(canvas,{type:'bar',data:{labels,datasets:[{label:'จำนวน (ครั้ง)',data,backgroundColor:data.map(v=>v>0?COLORS.primary+'bb':'rgba(255,255,255,.05)'),borderRadius:6,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>'  '+ctx.parsed.y+' ครั้ง'}}},scales:{x:{grid:{color:'rgba(255,255,255,.04)'}},y:{beginAtZero:true,grid:{color:'rgba(255,255,255,.06)'}}}}});
+
+// ============================================================
+// INIT & EVENT LISTENERS
+// ============================================================
+Chart.defaults.font.family="'Sarabun','Tahoma','Segoe UI',sans-serif";
+Chart.defaults.font.size=12;Chart.defaults.color='#94a3b8';
+Chart.defaults.plugins.legend.labels.usePointStyle=true;
+Chart.defaults.plugins.legend.labels.padding=12;
+Chart.defaults.plugins.tooltip.backgroundColor='rgba(10,12,28,.97)';
+Chart.defaults.plugins.tooltip.padding=11;Chart.defaults.plugins.tooltip.cornerRadius=8;
+Chart.defaults.plugins.tooltip.titleColor='#e2e8f0';Chart.defaults.plugins.tooltip.bodyColor='#94a3b8';
+
+function renderAll(){renderExec();}
+function renderTab(tab){
+  if(tab==='exec')renderExec();
+  else if(tab==='trend')renderTrend();
+  else if(tab==='service')renderService();
+  else if(tab==='retention')renderRetention();
+  else if(tab==='social')renderSocial();
+  else if(tab==='profit')renderProfit();
 }
-function toggleSvcExpand(idx,e){
-  if(e)e.stopPropagation();
-  const svcs=getActiveSvcs();
-  const svc=svcs[idx];
-  if(!svc||!getSvcKey(svc.name))return;
-  svcExpandedIdx=(svcExpandedIdx===idx)?null:idx;
-  renderSvcAnalysisGrid();
-}
-function toggleSvcCompare(idx,checked){
-  if(checked){
-    if(svcCompareSet.size>=4){alert('เลือกได้สูงสุด 4 รายการ');event.target.checked=false;return;}
-    svcCompareSet.add(idx);
-  } else {svcCompareSet.delete(idx);}
-  const fab=document.getElementById('compareFab');
-  const cnt=document.getElementById('compareCount');
-  if(fab){fab.style.display=svcCompareSet.size>0?'inline-flex':'none';}
-  if(cnt)cnt.textContent=svcCompareSet.size;
-  const wrap=document.getElementById('svcCompareWrap');
-  if(wrap)wrap.style.display=svcCompareSet.size>=2?'block':'none';
-  if(svcCompareSet.size>=2)renderSvcCompareChart();
-  document.querySelectorAll('.svc-m-card').forEach(card=>{
-    const i=parseInt(card.dataset.idx);
-    if(svcCompareSet.has(i))card.classList.add('compared');else card.classList.remove('compared');
-  });
-}
-function clearCompare(){
-  svcCompareSet.clear();
-  const fab=document.getElementById('compareFab');
-  if(fab)fab.style.display='none';
-  const cnt=document.getElementById('compareCount');
-  if(cnt)cnt.textContent='0';
-  const wrap=document.getElementById('svcCompareWrap');
-  if(wrap)wrap.style.display='none';
-  document.querySelectorAll('.svc-m-card').forEach(c=>c.classList.remove('compared'));
-  document.querySelectorAll('.svc-m-card input[type=checkbox]').forEach(cb=>cb.checked=false);
-  if(charts.svcCompare){charts.svcCompare.destroy();charts.svcCompare=null;}
-}
-function renderSvcCompareChart(){
-  const canvas=document.getElementById('svcCompareChart');
-  if(!canvas)return;
-  const displayMonths=getActiveSvcMonths();
-  const labels=displayMonths.map(ym=>monthlyData.find(m=>m.ym===ym)?.label||ym);
-  const colors=[COLORS.primary,COLORS.green,COLORS.orange,COLORS.purple];
-  const svcs=getActiveSvcs();
-  const datasets=[...svcCompareSet].map((idx,i)=>{
-    const svc=svcs[idx];if(!svc)return null;
-    const key=getSvcKey(svc.name);
-    const data=displayMonths.map(ym=>key&&svcMonthlyMap[key]?svcMonthlyMap[key][ym]||0:0);
-    const name=svc.name.length>30?svc.name.slice(0,28)+'…':svc.name;
-    return{label:name,data,borderColor:colors[i%4],backgroundColor:colors[i%4]+'20',tension:.4,fill:false,pointBackgroundColor:'#0b0d1e',pointBorderColor:colors[i%4],pointRadius:5,borderWidth:2.5};
-  }).filter(Boolean);
-  if(charts.svcCompare)charts.svcCompare.destroy();
-  charts.svcCompare=new Chart(canvas,{type:'line',data:{labels,datasets},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',align:'start'},tooltip:{callbacks:{label:ctx=>'  '+ctx.dataset.label+': '+ctx.parsed.y+' ครั้ง'}}},scales:{x:{grid:{color:'rgba(255,255,255,.04)'}},y:{beginAtZero:true,grid:{color:'rgba(255,255,255,.06)'}}}}});
-  const row=document.getElementById('compareGrowthRow');
-  if(row){
-    row.innerHTML=[...svcCompareSet].map((idx,i)=>{
-      const svc=svcs[idx];if(!svc)return'';
-      const key=getSvcKey(svc.name);
-      const growth=calcSvcGrowth(key);
-      const total=key?Object.values(svcMonthlyMap[key]).reduce((a,b)=>a+b,0):0;
-      const mCount=key?Object.keys(svcMonthlyMap[key]).length:0;
-      return`<div style="background:rgba(255,255,255,.04);border:1px solid ${colors[i%4]}44;border-radius:10px;padding:12px 14px;flex:1;min-width:160px">
-        <div style="font-size:11px;color:#64748b;margin-bottom:6px">${svc.name.length>35?svc.name.slice(0,33)+'…':svc.name}</div>
-        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-          <span style="font-size:20px;font-weight:700;color:${colors[i%4]}">${total}</span>
-          <span style="font-size:12px;color:#64748b">ครั้ง / ${mCount} เดือน</span>
-          ${growth!==null?`<span class="growth-badge ${growth>=0?'up':'down'}">${growth>=0?'↑':'↓'}${Math.abs(growth).toFixed(0)}%</span>`:''}
-        </div>
-      </div>`;
-    }).join('');
-  }
-}
-document.addEventListener('DOMContentLoaded',()=>{renderAll();renderTopServiceChart();renderAllServices();renderYoYChart();renderFbChart();renderTtChart();renderLineChart();renderMonthlySvc();initDailyData();initSvcMonthly();});
+
+// Filter bar
+document.getElementById('rangeChips').addEventListener('click',e=>{
+  if(!e.target.matches('.chip'))return;
+  document.querySelectorAll('#rangeChips .chip').forEach(c=>c.classList.remove('active'));
+  e.target.classList.add('active');state.range=e.target.dataset.range;
+  document.getElementById('monthSel').value='';
+  const activeTab=document.querySelector('.tab.active')?.dataset.tab||'exec';
+  renderTab(activeTab);
+});
+(()=>{const sel=document.getElementById('monthSel');MS.forEach(m=>{const o=document.createElement('option');o.value='m:'+m.ym;o.textContent=m.label+(m.partial?' ⚠️':'');sel.appendChild(o);});
+  sel.addEventListener('change',e=>{if(e.target.value){state.range=e.target.value;document.querySelectorAll('#rangeChips .chip').forEach(c=>c.classList.remove('active'));}else{state.range='all';document.querySelector('#rangeChips .chip[data-range="all"]').classList.add('active');}const activeTab=document.querySelector('.tab.active')?.dataset.tab||'exec';renderTab(activeTab);});
+})();
+
+// Tabs
+document.getElementById('tabBar').addEventListener('click',e=>{
+  if(!e.target.matches('.tab'))return;
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  e.target.classList.add('active');
+  document.querySelectorAll('.tab-pane').forEach(p=>p.classList.remove('active'));
+  document.getElementById('tab-'+e.target.dataset.tab).classList.add('active');
+  setTimeout(()=>{renderTab(e.target.dataset.tab);Object.values(charts).forEach(c=>c?.resize?.());},60);
+});
+
+// Exec trend toggle
+document.querySelectorAll('[data-exec]').forEach(btn=>btn.addEventListener('click',()=>{
+  document.querySelectorAll('[data-exec]').forEach(b=>b.classList.remove('active'));btn.classList.add('active');
+  state.execTrend=btn.dataset.exec;renderExecRevChart();
+}));
+
+// Trend metric toggle
+document.querySelectorAll('[data-metric]').forEach(btn=>btn.addEventListener('click',()=>{
+  document.querySelectorAll('[data-metric]').forEach(b=>b.classList.remove('active'));btn.classList.add('active');
+  state.trendMetric=btn.dataset.metric;renderTrend();
+}));
+
+// Service view toggle
+document.querySelectorAll('[data-svc]').forEach(btn=>btn.addEventListener('click',()=>{
+  document.querySelectorAll('[data-svc]').forEach(b=>b.classList.remove('active'));btn.classList.add('active');
+  state.svcView=btn.dataset.svc;renderSvcTopChart();
+}));
+
+// Role filter
+document.querySelectorAll('[data-role]').forEach(btn=>btn.addEventListener('click',()=>{
+  document.querySelectorAll('[data-role]').forEach(b=>b.classList.remove('active'));btn.classList.add('active');
+  state.svcRole=btn.dataset.role;renderSvcTable();
+}));
+
+// Service search & sort
+document.getElementById('svcSearch').addEventListener('input',e=>{state.svcSearch=e.target.value;renderSvcTable();});
+document.getElementById('svcSort').addEventListener('change',e=>{state.svcSort=e.target.value;renderSvcTable();});
+
+// Boot
+document.addEventListener('DOMContentLoaded',()=>{
+  renderWarnings();
+  renderExec();
+});
 </script></body></html>
