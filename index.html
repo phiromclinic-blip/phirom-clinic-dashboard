@@ -323,31 +323,20 @@ th.sa::after{content:' ▲';color:#818cf8}th.sd::after{content:' ▼';color:#818
 
 <!-- ===== TAB 6: PROFIT & EXPENSE ===== -->
 <div class="tab-pane" id="tab-profit">
+<div id="profitAlerts"></div>
 <div class="kpi-grid" id="kpi-profit"></div>
-<div class="section"><h2>📈 Revenue รายเดือน (ข้อมูลมีแล้ว)</h2>
-<div class="chart-box chart-tall"><canvas id="profitRevChart"></canvas></div></div>
+<div class="section"><h2>📊 Revenue vs Expense vs Net Profit รายเดือน</h2>
+<div class="desc" style="font-size:11px;margin-bottom:8px">แสดงเฉพาะเดือนที่มีข้อมูล Expense (ต.ค. 68 – เม.ย. 69)</div>
+<div class="chart-box chart-tall"><canvas id="profitRevExpChart"></canvas></div></div>
 <div class="row2">
-<div class="section"><div class="empty-state">
-<div class="icon">📊</div>
-<h3>Expense Data ยังไม่มี</h3>
-<p>ยังไม่ได้นำเข้าข้อมูลรายจ่ายรายเดือน<br>ไม่สามารถคำนวณ Net Profit, Net Margin, Break-even ได้</p>
-<div class="data-need-grid">
-<div class="data-need"><h4>💼 Fixed Costs (ต้องการ)</h4>
-<ul><li>ค่าเช่าสถานที่/เดือน</li><li>เงินเดือนพนักงาน</li><li>ค่าสาธารณูปโภค</li><li>ค่าประกัน/ใบอนุญาต</li></ul></div>
-<div class="data-need"><h4>🔧 Variable Costs (ต้องการ)</h4>
-<ul><li>ต้นทุนยาและเวชภัณฑ์</li><li>ค่าส่งตรวจ Lab</li><li>ค่าอุปกรณ์สิ้นเปลือง</li><li>Commission/OT</li></ul></div>
-<div class="data-need"><h4>📢 Marketing Spend (ต้องการ)</h4>
-<ul><li>ค่าโฆษณา Facebook/Meta</li><li>ค่าโฆษณา TikTok</li><li>ค่า Content/KOL</li><li>ค่า Boost ต่าง ๆ</li></ul></div>
+<div class="section"><h2>📈 Net Margin % รายเดือน</h2>
+<div class="desc" style="font-size:11px;margin-bottom:8px">⚠️ ม.ค. 69 ต่ำผิดปกติเพราะซื้อวัคซีน Stock — margin จริงควรอยู่ที่ ~62%</div>
+<div class="chart-box chart-tall"><canvas id="profitMarginChart"></canvas></div></div>
+<div class="section"><h2>🥧 สัดส่วน Expense เฉลี่ย</h2>
+<div class="desc" style="font-size:11px;margin-bottom:8px">⚠️ บางเดือนเป็นค่าประมาณ ยืนยันจากสมุดบัญชี ต.ค. 68, ธ.ค. 68, ม.ค. 69</div>
+<div class="chart-box chart-tall"><canvas id="profitCatChart"></canvas></div></div>
 </div>
-</div></div>
-<div class="section"><div class="empty-state">
-<div class="icon">💹</div>
-<h3>Net Profit — คำนวณไม่ได้ยังนี้</h3>
-<p>Net Profit = Income − Expense<br>Net Margin = Net Profit / Income × 100</p>
-<p style="margin-top:10px;color:var(--yellow)">⚠️ ขณะนี้มีแค่ Revenue (Income side) ยังขาดข้อมูล Expense ทั้งหมด</p>
-</div></div>
-</div>
-<div class="section"><h2>📋 สรุปสิ่งที่ยังคำนวณไม่ได้จริงในตอนนี้</h2>
+<div class="section"><h2>📋 สิ่งที่ยังคำนวณไม่ได้จากข้อมูลปัจจุบัน</h2>
 <div id="cannotCalc"></div></div>
 </div>
 
@@ -365,14 +354,28 @@ const MS=[
  {ym:'2568-07',label:'ก.ค. 68',yr:'2568',mo:7,revenue:341599,bills:168,uPat:168,newP:52,repP:116,openDays:28,perDay:12199,income:341599,expense:null,partial:false,warnTags:['no_expense','no_social']},
  {ym:'2568-08',label:'ส.ค. 68',yr:'2568',mo:8,revenue:391872,bills:257,uPat:257,newP:92,repP:165,openDays:27,perDay:14513,income:391872,expense:null,partial:false,warnTags:['no_expense','no_social']},
  {ym:'2568-09',label:'ก.ย. 68',yr:'2568',mo:9,revenue:430494,bills:265,uPat:265,newP:117,repP:148,openDays:26,perDay:16557,income:430494,expense:null,partial:false,warnTags:['no_expense','no_social']},
- {ym:'2568-10',label:'ต.ค. 68',yr:'2568',mo:10,revenue:380989,bills:258,uPat:258,newP:109,repP:149,openDays:25,perDay:15239,income:380989,expense:null,partial:false,warnTags:['no_expense','partial_social']},
- {ym:'2568-11',label:'พ.ย. 68',yr:'2568',mo:11,revenue:462781,bills:270,uPat:270,newP:150,repP:120,openDays:23,perDay:20120,income:462781,expense:null,partial:false,fbViews:489337,ttViews:335890,lineF:166,warnTags:['no_expense']},
- {ym:'2568-12',label:'ธ.ค. 68',yr:'2568',mo:12,revenue:546053,bills:301,uPat:301,newP:143,repP:158,openDays:26,perDay:21002,income:546053,expense:null,partial:false,fbViews:457807,ttViews:475844,lineF:180,warnTags:['no_expense']},
- {ym:'2569-01',label:'ม.ค. 69',yr:'2569',mo:1,revenue:587675,bills:310,uPat:310,newP:153,repP:157,openDays:24,perDay:24236,income:587675,expense:null,partial:false,fbViews:591898,ttViews:356031,lineF:167,warnTags:['no_expense']},
- {ym:'2569-02',label:'ก.พ. 69',yr:'2569',mo:2,revenue:577191,bills:310,uPat:310,newP:172,repP:138,openDays:24,perDay:24049,income:577191,expense:null,partial:false,fbViews:139167,ttViews:244275,lineF:46,warnTags:['no_expense','partial_social']},
- {ym:'2569-03',label:'มี.ค. 69',yr:'2569',mo:3,revenue:689732,bills:382,uPat:382,newP:209,repP:173,openDays:25,perDay:27589,income:689732,expense:null,partial:false,fbViews:594025,ttViews:null,lineF:null,warnTags:['no_expense','partial_social']},
- {ym:'2569-04',label:'เม.ย. 69',yr:'2569',mo:4,revenue:557210,bills:305,uPat:305,newP:135,repP:170,openDays:20,perDay:27860,income:557210,expense:null,partial:true,fbViews:null,ttViews:null,lineF:null,warnTags:['partial_month','no_expense','no_social']}
+ {ym:'2568-10',label:'ต.ค. 68',yr:'2568',mo:10,revenue:380989,bills:258,uPat:258,newP:109,repP:149,openDays:25,perDay:15239,income:380989,expense:248334,partial:false,warnTags:['partial_social']},
+ {ym:'2568-11',label:'พ.ย. 68',yr:'2568',mo:11,revenue:462781,bills:270,uPat:270,newP:150,repP:120,openDays:23,perDay:20120,income:462781,expense:238548,partial:false,fbViews:489337,ttViews:335890,lineF:166,warnTags:[]},
+ {ym:'2568-12',label:'ธ.ค. 68',yr:'2568',mo:12,revenue:546053,bills:301,uPat:301,newP:143,repP:158,openDays:26,perDay:21002,income:546053,expense:295273,partial:false,fbViews:457807,ttViews:475844,lineF:180,warnTags:[]},
+ {ym:'2569-01',label:'ม.ค. 69',yr:'2569',mo:1,revenue:587675,bills:310,uPat:310,newP:153,repP:157,openDays:24,perDay:24236,income:587675,expense:426877,partial:false,fbViews:591898,ttViews:356031,lineF:167,warnTags:['anomaly_expense']},
+ {ym:'2569-02',label:'ก.พ. 69',yr:'2569',mo:2,revenue:577191,bills:310,uPat:310,newP:172,repP:138,openDays:24,perDay:24049,income:577191,expense:216285,partial:false,fbViews:139167,ttViews:244275,lineF:46,warnTags:['partial_social']},
+ {ym:'2569-03',label:'มี.ค. 69',yr:'2569',mo:3,revenue:689732,bills:382,uPat:382,newP:209,repP:173,openDays:25,perDay:27589,income:689732,expense:217526,partial:false,fbViews:594025,ttViews:null,lineF:null,warnTags:['partial_social']},
+ {ym:'2569-04',label:'เม.ย. 69',yr:'2569',mo:4,revenue:557210,bills:305,uPat:305,newP:135,repP:170,openDays:20,perDay:27860,income:557210,expense:213360,partial:true,fbViews:null,ttViews:null,lineF:null,warnTags:['partial_month','no_social']}
 ];
+
+// Expense Category Breakdown (confirmed from bookkeeping spreadsheet)
+// Categories: labor(ค่าแรง), medical(ยา/เวชภัณฑ์), lab(ค่าแลป), marketing(โฆษณา), overhead(ค่าเช่า+สาธารณูปโภค), equipment(อุปกรณ์/เครื่องมือ), other
+const EXPENSE_CAT={
+ '2568-10':{labor:101000,medical:33413,lab:51955,marketing:19000,overhead:11077,equipment:0,other:31889},      // confirmed
+ '2568-11':{labor:101000,medical:30000,lab:47698,marketing:13000,overhead:11000,equipment:25850,other:10000},  // equipment confirmed; rest estimated
+ '2568-12':{labor:102640,medical:151727,lab:10600,marketing:12000,overhead:19365,equipment:0,other:-1059},     // confirmed (large Mounjaro stock in medical)
+ '2569-01':{labor:110590,medical:228569,lab:25550,marketing:15000,overhead:21187,equipment:0,other:25981},     // confirmed (vaccine ฿156,059 in medical)
+ '2569-02':{labor:101000,medical:15000,lab:42535,marketing:14000,overhead:21000,equipment:28750,other:-6000},  // equipment confirmed; rest estimated
+ '2569-03':{labor:101000,medical:15000,lab:60000,marketing:14000,overhead:21000,equipment:0,other:6526},      // estimated
+ '2569-04':{labor:62610,medical:12000,lab:77635,marketing:10000,overhead:21000,equipment:28750,other:1365},   // lab+equipment confirmed; labor estimated (partial month)
+};
+// Anomaly notes for January
+const EXPENSE_ANOMALY={'2569-01':{amount:156059,detail:'ซื้อวัคซีน Gardasil + วัคซีนเด็กล็อตใหญ่ (Stock Purchase ไม่ใช่ค่าใช้จ่ายปกติ)',normalizedMargin:62.1}};
 
 // Service Mapping: rawName, clean, cat, catLabel, role, roleLabel, price, qty, sum, isHT, isRet, isEntry
 const SVC=[
@@ -484,9 +487,11 @@ function prevMonth(m){const idx=MS.findIndex(x=>x.ym===m.ym);return idx>0?MS[idx
 // DATA WARNINGS
 // ============================================================
 function renderWarnings(){
+  const noExpMonths=MS.filter(m=>m.expense===null);
   const warns=[
-    {type:'error',icon:'❌',text:'ไม่มีข้อมูลรายจ่าย (Expense) — ทุกเดือน'},
+    ...(noExpMonths.length>0?[{type:'warn',icon:'⚠️',text:'ยังไม่มีข้อมูล Expense '+noExpMonths.length+' เดือน: '+noExpMonths.map(m=>m.label).join(', ')}]:[{type:'info',icon:'✅',text:'มีข้อมูล Expense ครบ ต.ค. 68 – เม.ย. 69 (7 เดือน)'}]),
     {type:'warn',icon:'⚠️',text:'เม.ย. 69 ยังไม่ครบเดือน (ข้อมูล 20 วันทำการ)'},
+    {type:'error',icon:'⚠️',text:'ม.ค. 69 — Expense สูงผิดปกติ ฿426,877 เพราะซื้อวัคซีน Stock ฿156,059 ไม่ใช่ค่าใช้จ่ายปกติ'},
     {type:'warn',icon:'📊',text:'Social Data ไม่ครบทุกเดือน — ก่อน พ.ย. 68 ไม่มีข้อมูล'},
     {type:'info',icon:'🔗',text:'ยังไม่มี Source Attribution — ไม่รู้ว่า Social Channel ไหนนำมาซึ่งคนไข้'},
     {type:'info',icon:'🆔',text:'ไม่มี HN Tracking — Retention คำนวณจาก Aggregate เท่านั้น'},
@@ -524,7 +529,7 @@ function renderExec(){
 
   document.getElementById('kpi-main').innerHTML=`
     <div class="kpi blue"><div class="lbl">💰 รายได้รวม</div><div class="val">${fmtB(totalRev)}</div><span class="sub neu">${data[0].label} – ${data[data.length-1].label}</span></div>
-    <div class="kpi red"><div class="lbl">💹 Net Profit<span class="estimate-tag">ยังไม่มีข้อมูล</span></div><div class="val na-val">N/A</div><span class="sub warn">⚠️ ต้องการข้อมูล Expense</span></div>
+    <div class="kpi ${(()=>{const withE=data.filter(m=>m.expense!==null);const np=withE.reduce((s,m)=>s+(m.revenue-m.expense),0);return np>=0?'green':'red';})()}"><div class="lbl">💹 Net Profit<span class="estimate-tag">${data.filter(m=>m.expense!==null).length} เดือน</span></div><div class="val">${(()=>{const withE=data.filter(m=>m.expense!==null);if(!withE.length)return'<span class=\\'na-val\\'>N/A</span>';const np=withE.reduce((s,m)=>s+(m.revenue-m.expense),0);return fmtB(np);})()}</div><span class="sub ${(()=>{const withE=data.filter(m=>m.expense!==null);if(!withE.length)return'warn';const np=withE.reduce((s,m)=>s+(m.revenue-m.expense),0);const rev=withE.reduce((s,m)=>s+m.revenue,0);const mg=(np/rev*100);return mg>=0?'up':'dn';})()}">${(()=>{const withE=data.filter(m=>m.expense!==null);if(!withE.length)return'⚠️ ต้องการข้อมูล Expense';const np=withE.reduce((s,m)=>s+(m.revenue-m.expense),0);const rev=withE.reduce((s,m)=>s+m.revenue,0);const mg=(np/rev*100);return(mg>=0?'↑':'↓')+' Margin '+mg.toFixed(1)+'%';})()}</span></div>
     <div class="kpi green"><div class="lbl">🧾 จำนวนบิล/Visit</div><div class="val">${fmt(totalBills)}</div><span class="sub neu">รวม ${data.length} เดือน</span></div>
     <div class="kpi purple"><div class="lbl">👥 คนไข้รวม (Proxy)</div><div class="val">${fmt(totalPat)}</div><span class="sub neu">New + Repeat</span></div>`;
 
@@ -540,8 +545,9 @@ function renderExec(){
       <div class="val">${revMoM!==null?(Math.abs(revMoM).toFixed(1)+'%'):'N/A'}</div>${momBadge(revMoM,lastLabel)}</div>
     <div class="kpi green"><div class="lbl">👥 Patient MoM</div>
       <div class="val">${patMoM!==null?(Math.abs(patMoM).toFixed(1)+'%'):'N/A'}</div>${momBadge(patMoM,lastLabel)}</div>
-    <div class="kpi red"><div class="lbl">💹 Net Profit MoM</div>
-      <div class="val na-val">N/A</div><span class="sub warn">⚠️ ต้องการข้อมูล Expense</span></div>`;
+    <div class="kpi ${(()=>{const withE=MS.filter(m=>!m.partial&&m.expense!==null);const l=withE.slice(-1)[0];const p=withE.slice(-2,-1)[0];if(!l||!p)return'muted';const mom=calcMoM(l.revenue-l.expense,p.revenue-p.expense);return mom===null?'muted':mom>=0?'green':'red';})()}"><div class="lbl">💹 Net Profit MoM<span style="font-size:10px;color:var(--dim)">(เดือนเต็มล่าสุด)</span></div>
+      <div class="val">${(()=>{const withE=MS.filter(m=>!m.partial&&m.expense!==null);const l=withE.slice(-1)[0];const p=withE.slice(-2,-1)[0];if(!l||!p)return'<span class=\\'na-val\\'>N/A</span>';const mom=calcMoM(l.revenue-l.expense,p.revenue-p.expense);return mom===null?'<span class=\\'na-val\\'>N/A</span>':(Math.abs(mom).toFixed(1)+'%');})()}</div>
+      <span class="sub ${(()=>{const withE=MS.filter(m=>!m.partial&&m.expense!==null);const l=withE.slice(-1)[0];const p=withE.slice(-2,-1)[0];if(!l||!p)return'na';const mom=calcMoM(l.revenue-l.expense,p.revenue-p.expense);return mom===null?'na':mom>=0?'up':'dn';})()}">${(()=>{const withE=MS.filter(m=>!m.partial&&m.expense!==null);const l=withE.slice(-1)[0];const p=withE.slice(-2,-1)[0];if(!l||!p)return'N/A — ไม่มีข้อมูลเพียงพอ';const mom=calcMoM(l.revenue-l.expense,p.revenue-p.expense);if(mom===null)return'N/A';return(mom>=0?'↑':'↓')+' '+Math.abs(mom).toFixed(1)+'% '+(l.label+' vs '+p.label);})()}</span></div>`;
 
   // charts
   renderExecRevChart();
@@ -779,24 +785,114 @@ function renderSocial(){
 // ============================================================
 function renderProfit(){
   const data=getFiltered();
-  const totalRev=data.reduce((s,m)=>s+m.revenue,0);
+  const withExp=data.filter(m=>m.expense!==null);
+  const noExp=data.filter(m=>m.expense===null);
+  const totalRev=withExp.reduce((s,m)=>s+m.revenue,0);
+  const totalExp=withExp.reduce((s,m)=>s+m.expense,0);
+  const totalProfit=totalRev-totalExp;
+  const avgMargin=totalRev>0?(totalProfit/totalRev*100):0;
+
+  // Net Profit MoM (last 2 full months with expense)
+  const fullWithExp=withExp.filter(m=>!m.partial);
+  const lastE=fullWithExp.slice(-1)[0];
+  const prevE=fullWithExp.slice(-2,-1)[0];
+  const profitLast=lastE?(lastE.revenue-lastE.expense):null;
+  const profitPrev=prevE?(prevE.revenue-prevE.expense):null;
+  const profitMoM=profitLast&&profitPrev?calcMoM(profitLast,profitPrev):null;
+
+  // KPI cards
   document.getElementById('kpi-profit').innerHTML=`
-    <div class="kpi blue"><div class="lbl">💰 Revenue รวม</div><div class="val">${fmtB(totalRev)}</div><span class="sub neu">${data.length} เดือน</span></div>
-    <div class="kpi muted"><div class="lbl">💸 Expense รวม</div><div class="val na-val">N/A</div><span class="sub warn">⚠️ ยังไม่มีข้อมูล</span></div>
-    <div class="kpi muted"><div class="lbl">💹 Net Profit</div><div class="val na-val">N/A</div><span class="sub warn">⚠️ Revenue − Expense</span></div>
-    <div class="kpi muted"><div class="lbl">📊 Net Margin</div><div class="val na-val">N/A</div><span class="sub warn">⚠️ Profit ÷ Revenue</span></div>`;
+    <div class="kpi blue"><div class="lbl">💰 Revenue รวม<span class="estimate-tag">${withExp.length} เดือน</span></div><div class="val">${fmtB(totalRev)}</div><span class="sub neu">(เฉพาะเดือนที่มี Expense)</span></div>
+    <div class="kpi orange"><div class="lbl">💸 Expense รวม<span class="estimate-tag">${withExp.length} เดือน</span></div><div class="val">${fmtB(totalExp)}</div><span class="sub warn">⚠️ ม.ค. 69 มี vaccine stock ฿156,059</span></div>
+    <div class="kpi ${totalProfit>0?'green':'red'}"><div class="lbl">💹 Net Profit รวม</div><div class="val">${fmtB(totalProfit)}</div><span class="sub ${totalProfit>0?'up':'dn'}">${totalProfit>0?'↑':'↓'} Avg Margin ${avgMargin.toFixed(1)}%</span></div>
+    <div class="kpi purple"><div class="lbl">📈 Profit MoM<span class="estimate-tag">${lastE&&prevE?lastE.label+' vs '+prevE.label:'-'}</span></div><div class="val">${profitMoM!==null?(Math.abs(profitMoM).toFixed(1)+'%'):'N/A'}</div><span class="sub ${profitMoM===null?'na':profitMoM>=0?'up':'dn'}">${profitMoM===null?'ข้อมูลไม่ครบ':profitMoM>=0?'↑ กำไรเพิ่ม':'↓ กำไรลด'}</span></div>`;
 
-  const cp=document.getElementById('profitRevChart');if(!cp)return;
-  if(charts.pr)charts.pr.destroy();
-  charts.pr=new Chart(cp,{type:'bar',data:{labels:data.map(m=>m.label+(m.partial?' ⚠️':'')),datasets:[{label:'Revenue',data:data.map(m=>m.revenue),backgroundColor:data.map(m=>m.partial?C.cyan+'44':C.cyan+'bb'),borderRadius:6}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>` ${fmtB(ctx.parsed.y)}${data[ctx.dataIndex]?.partial?' (ไม่ครบเดือน)':''}`}}},scales:{x:{grid:{color:'rgba(255,255,255,.04)'}},y:{beginAtZero:true,ticks:{callback:v=>fmt(v)},grid:{color:'rgba(255,255,255,.06)'}}}}});
+  // Alerts
+  let alertHtml='';
+  if(withExp.some(m=>EXPENSE_ANOMALY[m.ym])){
+    alertHtml+=`<div class="warn-card error" style="margin-bottom:10px">
+      <strong>⚠️ ม.ค. 2569 — Expense พุ่งผิดปกติ ฿426,877 (Net Margin 27.4%)</strong><br>
+      <span style="font-size:12px">มีการซื้อวัคซีน Gardasil + วัคซีนเด็กล็อตใหญ่ ฿156,059 เป็น <em>Stock Purchase ครั้งเดียว</em> — ไม่ใช่ค่าใช้จ่ายปกติรายเดือน | Margin จริงหากไม่นับ stock: ~62.1% | สอดคล้องกับเดือนอื่น</span>
+    </div>`;
+  }
+  if(noExp.length>0){
+    alertHtml+=`<div class="warn-card warn" style="margin-bottom:10px">
+      <strong>⚠️ ${noExp.length} เดือนที่ยังไม่มีข้อมูล Expense</strong><br>
+      <span style="font-size:12px">${noExp.map(m=>m.label).join(', ')} — Net Profit/Margin คำนวณไม่ได้สำหรับช่วงนี้</span>
+    </div>`;
+  }
+  document.getElementById('profitAlerts').innerHTML=alertHtml;
 
+  // Chart 1: Revenue vs Expense vs Net Profit (grouped bar)
+  const c1=document.getElementById('profitRevExpChart');if(!c1)return;
+  if(charts.pre)charts.pre.destroy();
+  charts.pre=new Chart(c1,{
+    type:'bar',
+    data:{
+      labels:withExp.map(m=>m.label+(m.partial?' ⚠️':'')),
+      datasets:[
+        {label:'Revenue',data:withExp.map(m=>m.revenue),backgroundColor:withExp.map(m=>m.partial?C.cyan+'55':C.cyan+'bb'),borderRadius:5,order:1},
+        {label:'Expense',data:withExp.map(m=>m.expense),backgroundColor:withExp.map(m=>EXPENSE_ANOMALY[m.ym]?C.red+'cc':C.orange+'bb'),borderRadius:5,order:1},
+        {label:'Net Profit',data:withExp.map(m=>m.revenue-m.expense),backgroundColor:withExp.map(m=>(m.revenue-m.expense)>=0?C.green+'aa':C.red+'aa'),borderRadius:5,order:1}
+      ]
+    },
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true,labels:{padding:16}},tooltip:{callbacks:{label:ctx=>{const m=withExp[ctx.dataIndex];const partial=m?.partial?' ⚠️ ไม่ครบเดือน':'';const anomaly=EXPENSE_ANOMALY[m?.ym]?' (รวม vaccine stock)':'';return ` ${ctx.dataset.label}: ${fmtB(ctx.parsed.y)}${anomaly}${partial}`;}}}},scales:{x:{grid:{color:'rgba(255,255,255,.04)'}},y:{beginAtZero:true,ticks:{callback:v=>fmt(v)},grid:{color:'rgba(255,255,255,.06)'}}}}
+  });
+
+  // Chart 2: Net Margin % line
+  const c2=document.getElementById('profitMarginChart');if(!c2)return;
+  if(charts.pm)charts.pm.destroy();
+  const margins=withExp.map(m=>(((m.revenue-m.expense)/m.revenue)*100));
+  charts.pm=new Chart(c2,{
+    type:'line',
+    data:{
+      labels:withExp.map(m=>m.label+(m.partial?' ⚠️':'')),
+      datasets:[{
+        label:'Net Margin %',
+        data:margins,
+        borderColor:C.green,
+        backgroundColor:ctx=>mkGrad(ctx,C.green),
+        fill:true,tension:.4,borderWidth:2.5,
+        pointBackgroundColor:withExp.map(m=>EXPENSE_ANOMALY[m.ym]?C.red:'#0b0d1e'),
+        pointBorderColor:withExp.map(m=>EXPENSE_ANOMALY[m.ym]?C.red:C.green),
+        pointRadius:withExp.map(m=>m.partial?4:6),pointBorderWidth:2,
+        segment:{borderDash:ctx=>withExp[ctx.p1DataIndex]?.partial?[6,3]:[]}
+      }]
+    },
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>{const m=withExp[ctx.dataIndex];const a=EXPENSE_ANOMALY[m?.ym];return ` ${ctx.parsed.y.toFixed(1)}%${a?' ⚠️ anomaly (จริง ~'+a.normalizedMargin+'%)':''}${m?.partial?' ⚠️ ไม่ครบเดือน':''}`;}}},annotation:{annotations:{line1:{type:'line',yMin:50,yMax:50,borderColor:'rgba(251,191,36,.35)',borderWidth:1,borderDash:[5,5],label:{content:'50% target',display:true,position:'start',color:'rgba(251,191,36,.7)',font:{size:10}}}}}},scales:{x:{grid:{color:'rgba(255,255,255,.04)'}},y:{ticks:{callback:v=>v.toFixed(0)+'%'},grid:{color:'rgba(255,255,255,.06)'}}}}
+  });
+
+  // Chart 3: Expense Category donut
+  const c3=document.getElementById('profitCatChart');if(c3){
+    if(charts.pcat)charts.pcat.destroy();
+    const mwc=withExp.filter(m=>EXPENSE_CAT[m.ym]);
+    if(mwc.length>0){
+      const ct={labor:0,medical:0,lab:0,marketing:0,overhead:0,equipment:0,other:0};
+      mwc.forEach(m=>{const e=EXPENSE_CAT[m.ym];Object.keys(ct).forEach(k=>ct[k]+=(e[k]||0));});
+      // Don't show negative 'other' in chart
+      const otherVal=Math.max(0,ct.other);
+      charts.pcat=new Chart(c3,{
+        type:'doughnut',
+        data:{
+          labels:['ค่าแรง/เงินเดือน','ยาและเวชภัณฑ์','ค่า Lab/ตรวจ','Marketing/โฆษณา','Overhead/ค่าเช่า','อุปกรณ์/เครื่องมือ','อื่น ๆ'],
+          datasets:[{
+            data:[ct.labor,ct.medical,ct.lab,ct.marketing,ct.overhead,ct.equipment,otherVal],
+            backgroundColor:[C.cyan+'cc',C.orange+'cc',C.purple+'cc',C.yellow+'cc',C.green+'cc',C.rose+'cc','rgba(100,116,139,.6)'],
+            borderWidth:2,borderColor:'rgba(255,255,255,.08)',hoverOffset:8
+          }]
+        },
+        options:{responsive:true,maintainAspectRatio:false,cutout:'55%',plugins:{legend:{display:true,position:'right',labels:{font:{size:11},padding:10}},tooltip:{callbacks:{label:ctx=>{const v=ctx.parsed;const tot=ctx.dataset.data.reduce((a,b)=>a+b,0);return ` ${fmtB(v)} (${(v/tot*100).toFixed(1)}%)`;}}}}}}
+      );
+    }
+  }
+
+  // Cannot Calc section
   document.getElementById('cannotCalc').innerHTML=`
-    <div class="insight r"><h3>❌ Net Profit / Net Margin</h3><p>ต้องการ: ค่าเช่า, เงินเดือน, ต้นทุนยา, ค่า Lab, ค่าใช้จ่ายทั่วไป รายเดือน</p></div>
-    <div class="insight r"><h3>❌ Break-even Analysis</h3><p>ต้องการ: Fixed Cost ต่อเดือน + Variable Cost per Patient → คำนวณ Break-even Patients ได้</p></div>
-    <div class="insight r"><h3>❌ ROAS (Return on Ad Spend)</h3><p>ต้องการ: Marketing Spend per Campaign + Revenue Attribution per Source — ห้ามคำนวณจาก Views โดยตรง</p></div>
-    <div class="insight r"><h3>❌ CAC (Customer Acquisition Cost)</h3><p>ต้องการ: Marketing Spend ÷ New Patients ที่มาจาก Marketing (ไม่ใช่ New Patients ทั้งหมด)</p></div>
-    <div class="insight r"><h3>❌ LTV (Lifetime Value)</h3><p>ต้องการ: HN-level visit history → คำนวณ Avg Revenue per Patient × Avg Retention Period</p></div>
-    <div class="insight"><h3>✅ สิ่งที่คำนวณได้แล้ว</h3><p>Revenue MoM Growth • Average Bill (Proxy) • Repeat Rate (Aggregate) • Revenue per Visit • New Patient Growth Rate • Service Category Mix • Service Volume Trend</p></div>`;
+    <div class="insight r"><h3>❌ ROAS (Return on Ad Spend)</h3><p>ต้องการ: Marketing Spend per Campaign + Revenue Attribution per Source — ห้ามคำนวณจาก Views</p></div>
+    <div class="insight r"><h3>❌ CAC (Customer Acquisition Cost)</h3><p>ต้องการ: Marketing Spend ÷ New Patients จาก Marketing (ไม่ใช่ New Patients ทั้งหมด)</p></div>
+    <div class="insight r"><h3>❌ LTV (Lifetime Value)</h3><p>ต้องการ: HN-level visit history → Avg Revenue per Patient × Avg Retention Period</p></div>
+    <div class="insight r"><h3>❌ Break-even Analysis</h3><p>ต้องการ: แยก Fixed Cost vs Variable Cost ชัดเจน → Break-even Patients per Month</p></div>
+    <div class="insight"><h3>✅ สิ่งที่คำนวณได้แล้ว (มีข้อมูล Expense แล้ว)</h3><p>Net Profit รายเดือน • Net Margin % • Revenue vs Expense Trend • Expense Category Mix (ประมาณ) • Profit MoM Growth • January Anomaly Detection</p></div>`;
 }
 
 // ============================================================
