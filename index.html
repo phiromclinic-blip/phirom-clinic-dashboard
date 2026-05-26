@@ -333,7 +333,7 @@ th.sa::after{content:' ▲';color:#818cf8}th.sd::after{content:' ▼';color:#818
 <div class="desc" style="font-size:11px;margin-bottom:8px">⚠️ ม.ค. 69 ต่ำผิดปกติเพราะซื้อวัคซีน Stock — margin จริงควรอยู่ที่ ~62%</div>
 <div class="chart-box chart-tall"><canvas id="profitMarginChart"></canvas></div></div>
 <div class="section"><h2>🥧 สัดส่วน Expense เฉลี่ย</h2>
-<div class="desc" style="font-size:11px;margin-bottom:8px">⚠️ บางเดือนเป็นค่าประมาณ ยืนยันจากสมุดบัญชี ต.ค. 68, ธ.ค. 68, ม.ค. 69</div>
+<div class="desc" style="font-size:11px;margin-bottom:8px">📂 ข้อมูลจาก Google Drive (งบประมาณธุรกิจ 2568/2569) ครบทุกเดือน — หมวด "สินเชื่อรีโนเวท+อุปกรณ์" รวมค่าผ่อนรีโนเวทคลินิก ฿970,000/ปี 2568</div>
 <div class="chart-box chart-tall"><canvas id="profitCatChart"></canvas></div></div>
 </div>
 <div class="section"><h2>📋 สิ่งที่ยังคำนวณไม่ได้จากข้อมูลปัจจุบัน</h2>
@@ -347,35 +347,70 @@ th.sa::after{content:' ▲';color:#818cf8}th.sd::after{content:' ▼';color:#818
 // ============================================================
 // DATA LAYER
 // ============================================================
+// ============================================================
+// DATA SOURCE: Google Drive → phirom data folder
+// Folder: https://drive.google.com/drive/folders/1JIe1AIs3ZEU5Z0SSHzSxxFrOCK5tjP4e
+// Last synced: 2026-05-26
+// Files: คนไข้ ปี2025/2026, รายจ่าย 2025/2026, โซเชี่ยลมีเดีย, เฉลี่ยรายได้ต่อคน 2025/2026, งบประมาณ 2568/2569
+// ============================================================
 const MS=[
- {ym:'2568-04',label:'เม.ย. 68',yr:'2568',mo:4,revenue:29089,bills:34,uPat:34,newP:6,repP:28,openDays:13,perDay:2237,income:29089,expense:null,partial:false,warnTags:['no_expense','no_social']},
- {ym:'2568-05',label:'พ.ค. 68',yr:'2568',mo:5,revenue:148998,bills:94,uPat:94,newP:21,repP:73,openDays:27,perDay:5518,income:148998,expense:null,partial:false,warnTags:['no_expense','no_social']},
- {ym:'2568-06',label:'มิ.ย. 68',yr:'2568',mo:6,revenue:179562,bills:124,uPat:124,newP:29,repP:95,openDays:24,perDay:7481,income:179562,expense:null,partial:false,warnTags:['no_expense','no_social']},
- {ym:'2568-07',label:'ก.ค. 68',yr:'2568',mo:7,revenue:341599,bills:168,uPat:168,newP:52,repP:116,openDays:28,perDay:12199,income:341599,expense:null,partial:false,warnTags:['no_expense','no_social']},
- {ym:'2568-08',label:'ส.ค. 68',yr:'2568',mo:8,revenue:391872,bills:257,uPat:257,newP:92,repP:165,openDays:27,perDay:14513,income:391872,expense:null,partial:false,warnTags:['no_expense','no_social']},
- {ym:'2568-09',label:'ก.ย. 68',yr:'2568',mo:9,revenue:430494,bills:265,uPat:265,newP:117,repP:148,openDays:26,perDay:16557,income:430494,expense:null,partial:false,warnTags:['no_expense','no_social']},
- {ym:'2568-10',label:'ต.ค. 68',yr:'2568',mo:10,revenue:380989,bills:258,uPat:258,newP:109,repP:149,openDays:25,perDay:15239,income:380989,expense:248334,partial:false,warnTags:['partial_social']},
- {ym:'2568-11',label:'พ.ย. 68',yr:'2568',mo:11,revenue:462781,bills:270,uPat:270,newP:150,repP:120,openDays:23,perDay:20120,income:462781,expense:238548,partial:false,fbViews:489337,ttViews:335890,lineF:166,warnTags:[]},
- {ym:'2568-12',label:'ธ.ค. 68',yr:'2568',mo:12,revenue:546053,bills:301,uPat:301,newP:143,repP:158,openDays:26,perDay:21002,income:546053,expense:295273,partial:false,fbViews:457807,ttViews:475844,lineF:180,warnTags:[]},
- {ym:'2569-01',label:'ม.ค. 69',yr:'2569',mo:1,revenue:587675,bills:310,uPat:310,newP:153,repP:157,openDays:24,perDay:24236,income:587675,expense:426877,partial:false,fbViews:591898,ttViews:356031,lineF:167,warnTags:['anomaly_expense']},
- {ym:'2569-02',label:'ก.พ. 69',yr:'2569',mo:2,revenue:577191,bills:310,uPat:310,newP:172,repP:138,openDays:24,perDay:24049,income:577191,expense:216285,partial:false,fbViews:139167,ttViews:244275,lineF:46,warnTags:['partial_social']},
- {ym:'2569-03',label:'มี.ค. 69',yr:'2569',mo:3,revenue:689732,bills:382,uPat:382,newP:209,repP:173,openDays:25,perDay:27589,income:689732,expense:217526,partial:false,fbViews:594025,ttViews:null,lineF:null,warnTags:['partial_social']},
- {ym:'2569-04',label:'เม.ย. 69',yr:'2569',mo:4,revenue:557210,bills:305,uPat:305,newP:135,repP:170,openDays:20,perDay:27860,income:557210,expense:213360,partial:true,fbViews:null,ttViews:null,lineF:null,warnTags:['partial_month','no_social']}
+ // Revenue: เฉลี่ยรายได้ต่อคน | Patients: คนไข้ (New/Repeat correct) | Expense: งบประมาณ (รวมผ่อนรีโนเวท) | Social: โซเชี่ยลมีเดีย
+ {ym:'2568-04',label:'เม.ย. 68',yr:'2568',mo:4,revenue:29089,bills:34,uPat:34,newP:28,repP:6,openDays:13,perDay:2237,income:29089,expense:81620,partial:false,
+  fbViews:299,ttViews:899,lineF:31,fbMsgs:3,ttMsgs:0,lineLink:13,linePoster:18,warnTags:[]},
+ {ym:'2568-05',label:'พ.ค. 68',yr:'2568',mo:5,revenue:148998,bills:94,uPat:94,newP:73,repP:21,openDays:27,perDay:5518,income:148998,expense:245469,partial:false,
+  fbViews:10121,ttViews:52598,lineF:61,fbMsgs:19,ttMsgs:3,lineLink:23,linePoster:38,warnTags:['anomaly_expense']},
+ {ym:'2568-06',label:'มิ.ย. 68',yr:'2568',mo:6,revenue:179562,bills:124,uPat:124,newP:95,repP:29,openDays:24,perDay:7481,income:179562,expense:255761,partial:false,
+  fbViews:325659,ttViews:573748,lineF:69,fbMsgs:109,ttMsgs:3,lineLink:40,linePoster:29,warnTags:['anomaly_expense']},
+ {ym:'2568-07',label:'ก.ค. 68',yr:'2568',mo:7,revenue:341599,bills:168,uPat:168,newP:116,repP:52,openDays:28,perDay:12199,income:341599,expense:454330,partial:false,
+  fbViews:303117,ttViews:628514,lineF:187,fbMsgs:221,ttMsgs:33,lineLink:139,linePoster:48,warnTags:['anomaly_expense']},
+ {ym:'2568-08',label:'ส.ค. 68',yr:'2568',mo:8,revenue:391872,bills:257,uPat:257,newP:165,repP:92,openDays:27,perDay:14513,income:391872,expense:346573,partial:false,
+  fbViews:374006,ttViews:596579,lineF:218,fbMsgs:290,ttMsgs:63,lineLink:167,linePoster:51,warnTags:[]},
+ {ym:'2568-09',label:'ก.ย. 68',yr:'2568',mo:9,revenue:430494,bills:265,uPat:265,newP:148,repP:117,openDays:26,perDay:16557,income:430494,expense:487642,partial:false,
+  fbViews:310409,ttViews:371715,lineF:220,fbMsgs:321,ttMsgs:53,lineLink:166,linePoster:54,warnTags:['anomaly_expense']},
+ {ym:'2568-10',label:'ต.ค. 68',yr:'2568',mo:10,revenue:380989,bills:258,uPat:258,newP:149,repP:109,openDays:25,perDay:15239,income:380989,expense:406414,partial:false,
+  fbViews:262952,ttViews:239966,lineF:171,fbMsgs:264,ttMsgs:42,lineLink:138,linePoster:33,warnTags:['anomaly_expense']},
+ {ym:'2568-11',label:'พ.ย. 68',yr:'2568',mo:11,revenue:462781,bills:270,uPat:270,newP:150,repP:120,openDays:23,perDay:20120,income:462781,expense:496469,partial:false,
+  fbViews:509210,ttViews:358612,lineF:173,fbMsgs:226,ttMsgs:45,lineLink:124,linePoster:49,warnTags:['anomaly_expense']},
+ {ym:'2568-12',label:'ธ.ค. 68',yr:'2568',mo:12,revenue:546053,bills:301,uPat:301,newP:158,repP:143,openDays:26,perDay:21002,income:546053,expense:451525,partial:false,
+  fbViews:486382,ttViews:511506,lineF:199,fbMsgs:334,ttMsgs:54,lineLink:158,linePoster:41,warnTags:[]},
+ {ym:'2569-01',label:'ม.ค. 69',yr:'2569',mo:1,revenue:581675,bills:310,uPat:310,newP:157,repP:153,openDays:24,perDay:24237,income:581675,expense:528461,partial:false,
+  fbViews:600522,ttViews:429129,lineF:195,fbMsgs:302,ttMsgs:59,lineLink:151,linePoster:44,warnTags:['anomaly_expense']},
+ {ym:'2569-02',label:'ก.พ. 69',yr:'2569',mo:2,revenue:577191,bills:310,uPat:310,newP:138,repP:172,openDays:24,perDay:24049,income:577191,expense:456296,partial:false,
+  fbViews:166110,ttViews:233532,lineF:167,fbMsgs:260,ttMsgs:63,lineLink:143,linePoster:24,warnTags:[]},
+ {ym:'2569-03',label:'มี.ค. 69',yr:'2569',mo:3,revenue:689732,bills:387,uPat:387,newP:178,repP:209,openDays:25,perDay:27589,income:689732,expense:493189,partial:false,
+  fbViews:706765,ttViews:398537,lineF:242,fbMsgs:258,ttMsgs:78,lineLink:190,linePoster:52,warnTags:[]},
+ {ym:'2569-04',label:'เม.ย. 69',yr:'2569',mo:4,revenue:557210,bills:305,uPat:305,newP:135,repP:170,openDays:20,perDay:27861,income:557210,expense:305600,partial:true,
+  fbViews:381378,ttViews:371543,lineF:254,fbMsgs:232,ttMsgs:68,lineLink:207,linePoster:47,warnTags:['partial_month']},
+ {ym:'2569-05',label:'พ.ค. 69',yr:'2569',mo:5,revenue:144017,bills:59,uPat:59,newP:31,repP:28,openDays:11,perDay:13092,income:144017,expense:null,partial:true,
+  fbViews:null,ttViews:null,lineF:null,fbMsgs:null,ttMsgs:null,lineLink:null,linePoster:null,warnTags:['partial_month','no_expense','no_social']}
 ];
 
-// Expense Category Breakdown (confirmed from bookkeeping spreadsheet)
-// Categories: labor(ค่าแรง), medical(ยา/เวชภัณฑ์), lab(ค่าแลป), marketing(โฆษณา), overhead(ค่าเช่า+สาธารณูปโภค), equipment(อุปกรณ์/เครื่องมือ), other
+// Expense Category Breakdown — source: งบประมาณธุรกิจ 2568/2569 (Google Drive)
+// 2025 format uses budget template categories; 2026 uses updated structure
+// Fields: marketing | overhead (rent+utilities+software) | labor (all staff) | medical_lab (drugs+vaccine+lab) | loans_equip (renovation+ultrasound) | office | other
 const EXPENSE_CAT={
- '2568-10':{labor:101000,medical:33413,lab:51955,marketing:19000,overhead:11077,equipment:0,other:31889},      // confirmed
- '2568-11':{labor:101000,medical:30000,lab:47698,marketing:13000,overhead:11000,equipment:25850,other:10000},  // equipment confirmed; rest estimated
- '2568-12':{labor:102640,medical:151727,lab:10600,marketing:12000,overhead:19365,equipment:0,other:-1059},     // confirmed (large Mounjaro stock in medical)
- '2569-01':{labor:110590,medical:228569,lab:25550,marketing:15000,overhead:21187,equipment:0,other:25981},     // confirmed (vaccine ฿156,059 in medical)
- '2569-02':{labor:101000,medical:15000,lab:42535,marketing:14000,overhead:21000,equipment:28750,other:-6000},  // equipment confirmed; rest estimated
- '2569-03':{labor:101000,medical:15000,lab:60000,marketing:14000,overhead:21000,equipment:0,other:6526},      // estimated
- '2569-04':{labor:62610,medical:12000,lab:77635,marketing:10000,overhead:21000,equipment:28750,other:1365},   // lab+equipment confirmed; labor estimated (partial month)
+ '2568-04':{marketing:0,overhead:0,labor:0,medical_lab:17620,loans_equip:64000,office:0,other:0},
+ '2568-05':{marketing:0,overhead:1492,labor:43550,medical_lab:115025,loans_equip:28750,office:55852,other:800},
+ '2568-06':{marketing:10000,overhead:1492,labor:25900,medical_lab:81427,loans_equip:133750,office:3192,other:0},
+ '2568-07':{marketing:10000,overhead:6557,labor:36850,medical_lab:142110,loans_equip:228750,office:29063,other:1000},
+ '2568-08':{marketing:20000,overhead:6688,labor:44600,medical_lab:99903,loans_equip:128750,office:46632,other:0},
+ '2568-09':{marketing:20000,overhead:6534,labor:49550,medical_lab:194135,loans_equip:185494,office:30429,other:1500},
+ '2568-10':{marketing:19000,overhead:7219,labor:71688,medical_lab:95757,loans_equip:190725,office:22025,other:0},
+ '2568-11':{marketing:20000,overhead:7017,labor:74580,medical_lab:159582,loans_equip:192497,office:42793,other:0},
+ '2568-12':{marketing:25000,overhead:10952,labor:59390,medical_lab:218076,loans_equip:136474,office:1633,other:0},
+ // 2026: ค่าปันส่วน=overhead(rent+util+sw)+loans_equip | ค่าแรง=labor | ค่าสินค้าและบริการ=medical_lab
+ '2569-01':{marketing:20643,overhead:23329,labor:130590,medical_lab:274217,loans_equip:78750,office:21370,other:749},
+ '2569-02':{marketing:11608,overhead:22281,labor:157850,medical_lab:168278,loans_equip:100892-22281,office:17268,other:400},
+ '2569-03':{marketing:21775,overhead:22757,labor:177880,medical_lab:175013,loans_equip:100892-22757,office:9889,other:7740},
+ '2569-04':{marketing:19923,overhead:22721,labor:153110,medical_lab:22001,loans_equip:100892-22721,office:9674,other:0},
 };
-// Anomaly notes for January
-const EXPENSE_ANOMALY={'2569-01':{amount:156059,detail:'ซื้อวัคซีน Gardasil + วัคซีนเด็กล็อตใหญ่ (Stock Purchase ไม่ใช่ค่าใช้จ่ายปกติ)',normalizedMargin:62.1}};
+// Anomaly notes: vaccine stock Jan 2026 + renovation loan 2025
+const EXPENSE_ANOMALY={
+ '2569-01':{amount:156059,detail:'ซื้อวัคซีน Gardasil + วัคซีนเด็กล็อตใหญ่ (Stock Purchase) ในหมวด ค่าสินค้าและบริการ',normalizedMargin:9.2},
+ '2568-05':{amount:100000,detail:'เริ่มผ่อนสินเชื่อรีโนเวทคลินิก (ค่าผ่อนรวมยอด ฿970,000 ทั้งปี 2568)',normalizedMargin:null},
+ '2568-07':{amount:200000,detail:'ผ่อนรีโนเวทคลินิก 2 เท่า (฿200,000) ในเดือนเดียว — ทำให้ขาดทุนสุทธิ',normalizedMargin:null},
+ '2568-09':{amount:156500,detail:'ผ่อนรีโนเวทคลินิก ฿156,500/เดือน + ค่ายาสูง ฿82,533',normalizedMargin:null},
+};
 
 // Service Mapping: rawName, clean, cat, catLabel, role, roleLabel, price, qty, sum, isHT, isRet, isEntry
 const SVC=[
@@ -489,10 +524,11 @@ function prevMonth(m){const idx=MS.findIndex(x=>x.ym===m.ym);return idx>0?MS[idx
 function renderWarnings(){
   const noExpMonths=MS.filter(m=>m.expense===null);
   const warns=[
-    ...(noExpMonths.length>0?[{type:'warn',icon:'⚠️',text:'ยังไม่มีข้อมูล Expense '+noExpMonths.length+' เดือน: '+noExpMonths.map(m=>m.label).join(', ')}]:[{type:'info',icon:'✅',text:'มีข้อมูล Expense ครบ ต.ค. 68 – เม.ย. 69 (7 เดือน)'}]),
-    {type:'warn',icon:'⚠️',text:'เม.ย. 69 ยังไม่ครบเดือน (ข้อมูล 20 วันทำการ)'},
-    {type:'error',icon:'⚠️',text:'ม.ค. 69 — Expense สูงผิดปกติ ฿426,877 เพราะซื้อวัคซีน Stock ฿156,059 ไม่ใช่ค่าใช้จ่ายปกติ'},
-    {type:'warn',icon:'📊',text:'Social Data ไม่ครบทุกเดือน — ก่อน พ.ย. 68 ไม่มีข้อมูล'},
+    ...(noExpMonths.length>0?[{type:'warn',icon:'⚠️',text:'ยังไม่มีข้อมูล Expense '+noExpMonths.length+' เดือน: '+noExpMonths.map(m=>m.label).join(', ')}]:[{type:'info',icon:'✅',text:'มีข้อมูล Expense ครบ เม.ย. 68 – เม.ย. 69 (13 เดือน) — ข้อมูลจาก Google Drive (งบประมาณธุรกิจ 2568/2569)'}]),
+    {type:'warn',icon:'⚠️',text:'เม.ย. 69 และ พ.ค. 69 ยังไม่ครบเดือน — Revenue/Expense เป็นข้อมูลบางส่วน'},
+    {type:'error',icon:'🏗️',text:'ปี 2568 — ผ่อนสินเชื่อรีโนเวทคลินิก ฿970,000 รวมทั้งปี ทำให้ Net Profit ติดลบหลายเดือน แม้ Operations ทำกำไร'},
+    {type:'error',icon:'💉',text:'ม.ค. 69 — Expense สูงผิดปกติ ฿528,461 เพราะซื้อวัคซีน Stock ฿156,059 ไม่ใช่ค่าใช้จ่ายปกติ'},
+    {type:'warn',icon:'📊',text:'Social Data บางเดือนไม่ครบ — ก่อน มิ.ย. 68 มีข้อมูลน้อยมาก'},
     {type:'info',icon:'🔗',text:'ยังไม่มี Source Attribution — ไม่รู้ว่า Social Channel ไหนนำมาซึ่งคนไข้'},
     {type:'info',icon:'🆔',text:'ไม่มี HN Tracking — Retention คำนวณจาก Aggregate เท่านั้น'},
   ];
@@ -807,14 +843,26 @@ function renderProfit(){
     <div class="kpi ${totalProfit>0?'green':'red'}"><div class="lbl">💹 Net Profit รวม</div><div class="val">${fmtB(totalProfit)}</div><span class="sub ${totalProfit>0?'up':'dn'}">${totalProfit>0?'↑':'↓'} Avg Margin ${avgMargin.toFixed(1)}%</span></div>
     <div class="kpi purple"><div class="lbl">📈 Profit MoM<span class="estimate-tag">${lastE&&prevE?lastE.label+' vs '+prevE.label:'-'}</span></div><div class="val">${profitMoM!==null?(Math.abs(profitMoM).toFixed(1)+'%'):'N/A'}</div><span class="sub ${profitMoM===null?'na':profitMoM>=0?'up':'dn'}">${profitMoM===null?'ข้อมูลไม่ครบ':profitMoM>=0?'↑ กำไรเพิ่ม':'↓ กำไรลด'}</span></div>`;
 
-  // Alerts
+  // Alerts — dynamic per filtered months
   let alertHtml='';
-  if(withExp.some(m=>EXPENSE_ANOMALY[m.ym])){
+  // Renovation loan alert (normalizedMargin===null = loan anomaly)
+  const renovMonths=withExp.filter(m=>EXPENSE_ANOMALY[m.ym]&&EXPENSE_ANOMALY[m.ym].normalizedMargin===null);
+  if(renovMonths.length>0){
     alertHtml+=`<div class="warn-card error" style="margin-bottom:10px">
-      <strong>⚠️ ม.ค. 2569 — Expense พุ่งผิดปกติ ฿426,877 (Net Margin 27.4%)</strong><br>
-      <span style="font-size:12px">มีการซื้อวัคซีน Gardasil + วัคซีนเด็กล็อตใหญ่ ฿156,059 เป็น <em>Stock Purchase ครั้งเดียว</em> — ไม่ใช่ค่าใช้จ่ายปกติรายเดือน | Margin จริงหากไม่นับ stock: ~62.1% | สอดคล้องกับเดือนอื่น</span>
+      <span class="icon">🏗️</span><span><strong>สินเชื่อรีโนเวทคลินิก — ผลกระทบต่อ Net Profit ปี 2568</strong><br>
+      <span style="font-size:12px">${renovMonths.map(m=>{const a=EXPENSE_ANOMALY[m.ym];return '<b>'+m.label+'</b>: '+a.detail;}).join(' &nbsp;|&nbsp; ')}<br>
+      ⚠️ ขาดทุนสุทธิในบางเดือนเพราะภาระผ่อนสินเชื่อ ไม่ใช่ Operations ขาดทุน — ยอดผ่อนรวมทั้งปี 2568: ฿970,000</span></span>
     </div>`;
   }
+  // Vaccine/stock anomaly (normalizedMargin has a value)
+  const vaccineMonths=withExp.filter(m=>EXPENSE_ANOMALY[m.ym]&&EXPENSE_ANOMALY[m.ym].normalizedMargin!==null);
+  vaccineMonths.forEach(m=>{
+    const a=EXPENSE_ANOMALY[m.ym];
+    alertHtml+=`<div class="warn-card warn" style="margin-bottom:10px">
+      <span class="icon">💉</span><span><strong>${m.label} — Expense พุ่งผิดปกติ (รวม Stock ฿${fmt(a.amount)})</strong><br>
+      <span style="font-size:12px">${a.detail} — ไม่ใช่ค่าใช้จ่ายปกติรายเดือน | Margin จริงหากไม่นับ stock: ~${a.normalizedMargin}%</span></span>
+    </div>`;
+  });
   if(noExp.length>0){
     alertHtml+=`<div class="warn-card warn" style="margin-bottom:10px">
       <strong>⚠️ ${noExp.length} เดือนที่ยังไม่มีข้อมูล Expense</strong><br>
@@ -867,17 +915,17 @@ function renderProfit(){
     if(charts.pcat)charts.pcat.destroy();
     const mwc=withExp.filter(m=>EXPENSE_CAT[m.ym]);
     if(mwc.length>0){
-      const ct={labor:0,medical:0,lab:0,marketing:0,overhead:0,equipment:0,other:0};
+      const ct={labor:0,medical_lab:0,marketing:0,overhead:0,loans_equip:0,office:0,other:0};
       mwc.forEach(m=>{const e=EXPENSE_CAT[m.ym];Object.keys(ct).forEach(k=>ct[k]+=(e[k]||0));});
       // Don't show negative 'other' in chart
       const otherVal=Math.max(0,ct.other);
       charts.pcat=new Chart(c3,{
         type:'doughnut',
         data:{
-          labels:['ค่าแรง/เงินเดือน','ยาและเวชภัณฑ์','ค่า Lab/ตรวจ','Marketing/โฆษณา','Overhead/ค่าเช่า','อุปกรณ์/เครื่องมือ','อื่น ๆ'],
+          labels:['ค่าแรง/เงินเดือน','ยา+เวชภัณฑ์+Lab','Marketing/โฆษณา','Overhead (เช่า+สาธารณูปโภค)','สินเชื่อรีโนเวท+อุปกรณ์','สำนักงาน/บริหาร','อื่น ๆ'],
           datasets:[{
-            data:[ct.labor,ct.medical,ct.lab,ct.marketing,ct.overhead,ct.equipment,otherVal],
-            backgroundColor:[C.cyan+'cc',C.orange+'cc',C.purple+'cc',C.yellow+'cc',C.green+'cc',C.rose+'cc','rgba(100,116,139,.6)'],
+            data:[ct.labor,ct.medical_lab,ct.marketing,ct.overhead,ct.loans_equip,ct.office,otherVal],
+            backgroundColor:[C.cyan+'cc',C.orange+'cc',C.yellow+'cc',C.green+'cc',C.rose+'cc',C.purple+'cc','rgba(100,116,139,.6)'],
             borderWidth:2,borderColor:'rgba(255,255,255,.08)',hoverOffset:8
           }]
         },
